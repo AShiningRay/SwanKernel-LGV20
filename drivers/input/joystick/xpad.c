@@ -521,7 +521,6 @@ static void xpad360w_process_packet(struct usb_xpad *xpad, u16 cmd, unsigned cha
 	if (data[0] & 0x08) {
 		if (data[1] & 0x80) {
 			xpad->pad_present = 1;
-			usb_submit_urb(xpad->bulk_out, GFP_ATOMIC);
 			/*
 			 * Light up the segment corresponding to
 			 * controller number.
@@ -1304,7 +1303,8 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 		xpad->irq_in->dev = xpad->udev;
 		error = usb_submit_urb(xpad->irq_in, GFP_KERNEL);
 		if (error)
-			goto err_deinit_input;
+			goto fail7;
+	}
 
 		/*
 		 * Send presence packet.
@@ -1319,6 +1319,7 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 	}
 	return 0;
 
+
 err_kill_in_urb:
 	usb_kill_urb(xpad->irq_in);
 err_deinit_input:
@@ -1330,6 +1331,16 @@ err_free_in_urb:
 err_free_idata:
 	usb_free_coherent(udev, XPAD_PKT_LEN, xpad->idata, xpad->idata_dma);
 err_free_mem:
+
+ fail7:	input_unregister_device(input_dev);
+	input_dev = NULL;
+ fail6:	xpad_led_disconnect(xpad);
+ fail5:	if (input_dev)
+		input_ff_destroy(input_dev);
+ fail4:	xpad_deinit_output(xpad);
+ fail3:	usb_free_urb(xpad->irq_in);
+ fail2:	usb_free_coherent(udev, XPAD_PKT_LEN, xpad->idata, xpad->idata_dma);
+ fail1:	input_free_device(input_dev);
 	kfree(xpad);
 	return error;
 
