@@ -1327,11 +1327,8 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 	}
 	return 0;
 
-
 err_kill_in_urb:
 	usb_kill_urb(xpad->irq_in);
-	return 0;
-
 err_deinit_input:
 	xpad_deinit_input(xpad);
 err_deinit_output:
