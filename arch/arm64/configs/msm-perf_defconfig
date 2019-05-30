@@ -675,3 +675,6 @@ CONFIG_FORCE_FAST_CHARGE=y
 
 # Boeffla Wakelock Blocker
 CONFIG_BOEFFLA_WL_BLOCKER=y
+
+# Dynamic Fsync V2.3
+CONFIG_DYNAMIC_FSYNC=y
