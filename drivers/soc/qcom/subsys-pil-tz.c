@@ -619,7 +619,7 @@ static int pil_init_image_trusted(struct pil_desc *pil,
 	kmap_flush_unused();
 	kmap_atomic_flush_unused();
 
-	memcpy(mdata_buf, metadata, size);
+	memcpy_toio((void __iomem *)mdata_buf, metadata, size);
 
 	request.proc = d->pas_id;
 	request.image_addr = mdata_phys;
