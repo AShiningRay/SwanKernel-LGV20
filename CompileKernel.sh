@@ -7,5 +7,5 @@ make -j$(nproc --all) O=KernelOut \
 		      SUBARCH=arm64 \
                       CC=/home/paulo/Documentos/V20CustomKernel/CLANG/bin/clang \
                       CLANG_TRIPLE=/home/paulo/Documentos/V20CustomKernel/CLANG/bin/aarch64-linux-gnu- \
-                      CROSS_COMPILE=/home/paulo/Documentos/V20CustomKernel/toolchainaarch64/bin/aarch64-linux-androidkernel- | tee AKernelOut/swanKernel.log #\
+                      CROSS_COMPILE=/home/paulo/Documentos/V20CustomKernel/toolchainaarch64/bin/aarch64-linux-androidkernel- | tee KernelOut/swanKernel.log #\
 		      #CROSS_COMPILE_ARM32=/home/paulo/Documentos/V20CustomKernel/toolchainarm32/bin/arm-linux-androidkernel- 
