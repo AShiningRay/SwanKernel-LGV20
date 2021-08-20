@@ -2,8 +2,9 @@ VERSION = 3
 PATCHLEVEL = 18
 SUBLEVEL = 113
 EXTRAVERSION =
-NAME = Diseased Newt
 
+CONFIG_LOCALVERSION="-FlashKernel"
+LOCALVERSION="-v0.6"
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
