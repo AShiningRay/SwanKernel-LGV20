@@ -109,7 +109,7 @@ struct wsa881x_priv {
 
 #define SWR_SLV_MAX_REG_ADDR	0x390
 #define SWR_SLV_START_REG_ADDR	0x40
-#define SWR_SLV_MAX_BUF_LEN	20
+#define SWR_SLV_MAX_BUF_LEN	30 /*20->30 removes a warning*/
 #define BYTES_PER_LINE		12
 #define SWR_SLV_RD_BUF_LEN	8
 #define SWR_SLV_WR_BUF_LEN	32

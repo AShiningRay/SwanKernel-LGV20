@@ -2163,7 +2163,7 @@ dhd_pno_set_for_gscan(dhd_pub_t *dhd, struct dhd_pno_gscan_params *gscan_params)
 	pfn_gscan_cfg_t->retry_threshold = GSCAN_RETRY_THRESHOLD;
 
 	for (i = 0, k = 0; i < tot_num_buckets; i++) {
-		if (ch_bucket[i].bucket_end_index  != CHANNEL_BUCKET_EMPTY_INDEX) {
+		if (ch_bucket[i].bucket_end_index) {
 			pfn_gscan_cfg_t->channel_bucket[k].bucket_end_index =
 			           ch_bucket[i].bucket_end_index;
 			pfn_gscan_cfg_t->channel_bucket[k].bucket_freq_multiple =

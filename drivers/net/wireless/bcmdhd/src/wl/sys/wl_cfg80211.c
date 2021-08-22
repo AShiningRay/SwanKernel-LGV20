@@ -16890,11 +16890,14 @@ struct wiphy *wiphy)
 			break;
 
 	}
-
+	
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wconversion"
 	if (CHSPEC_IS5G(chanspec))
 		freq = ieee80211_channel_to_frequency(channel, NL80211_BAND_5GHZ);
 	else
 		freq = ieee80211_channel_to_frequency(channel, NL80211_BAND_2GHZ);
+	#pragma GCC diagnostic pop
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION (3, 8, 0))
 	cfg80211_chandef_create(chandef, ieee80211_get_channel(wiphy, freq), chan_type);

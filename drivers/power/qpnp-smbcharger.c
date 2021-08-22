@@ -9702,8 +9702,11 @@ static irqreturn_t usbin_uv_handler(int irq, void *_chip)
 		if (!chip->lge_cc_lpc)
 			pr_err("%s : lge_cc_lpc is not yet ready\n", __func__);
 		else {
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wconversion"
 			rc = chip->lge_cc_lpc->get_property(chip->lge_cc_lpc,
 				POWER_SUPPLY_PROP_USB_CURRENT_MAX_MODE,	&lge_val);
+			#pragma GCC diagnostic pop
 			if (rc < 0)
 				pr_smb(PR_LGE, "could not get current_max mode,"
 					" rc=%d\n", rc);
@@ -10320,8 +10323,8 @@ static void lgcc_charger_reginfo(struct work_struct *work) {
 	else
 		delay_time = CHARGING_INFORM_NORMAL_TIME;
 
-		schedule_delayed_work(&chip->charging_info_work,
-			round_jiffies_relative(msecs_to_jiffies(delay_time)));
+	schedule_delayed_work(&chip->charging_info_work,
+		round_jiffies_relative(msecs_to_jiffies(delay_time)));
 
 }
 #endif
