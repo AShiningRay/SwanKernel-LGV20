@@ -3,8 +3,9 @@ PATCHLEVEL = 18
 SUBLEVEL = 113
 EXTRAVERSION =
 
-CONFIG_LOCALVERSION="-FlashKernel"
-LOCALVERSION="-v0.6"
+CONFIG_LOCALVERSION="-SwanKernel"
+export LOCALVERSION="-v0.7"
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
