@@ -32,9 +32,7 @@ Of cource, i will write a guide on how to compile this kernel soon ;)
 
 For now, there is one critical bug to be fixed ASAP: The phone's Bluetooth, at least on my H910, isn't working at all. That problem is definitely located in the kernel, since it happens on different Android 11 ROMs like the Lighthouse LG V20(the one i'm personally using), Lineage OS 18.1 and Superior OS Xcalibur ROMs.
 
-Besides that, there's also the dreaded Infrared Blaster, and it... works? It sends the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything else after that first command, but the IR Blaster's light still works all the time though, despite having some big delays between on/off states.
-
-The kernel also has some smaller problems mainly having to do with its inability to be compiled with CONFIG_COMPAT_VDSO enabled, but this doesn't seem to be a major problem since the kernel compiles seamlessly without it, unless it is the reason behind the Bluetooth bug, although i think thats very unlikely.
+Besides that, there's also the dreaded Infrared Blaster, and it... works? The IR is able to send the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything else after that first command, but the IR Blaster's light still works all the time though, despite having some big delays between on/off states.
 
 ### Do you have anyone to thank for?
 
