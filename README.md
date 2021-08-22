@@ -4,11 +4,11 @@ SwanKernel is a kernel based on the latest Lineage OS 18.1's sources for the V20
 
 ### Which phone variants/models does this kernel support?
 
-Since it is still pretty much an Alpha. This kernel only supports the following models:
+Since it is still pretty much an Alpha, this kernel only supports the following models:
 
 * H910/ELSA/US996
 
-But support for other models will be coming.
+But support for other models will be coming at a later date.
 
 ### What are the kernels end goals?
 
@@ -22,6 +22,7 @@ Yes, even if the list is still somewhat small:
 2. GPU and CPU UnderVolt (2 variants of the kernel, one with stable UVs, and the other with extreme UVs, if your phone can handle).
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
+5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
 
 ### Great, but can i compile it from source if i need to?
 
@@ -29,17 +30,17 @@ Of cource, i will write a guide on how to compile this kernel soon ;)
 
 ### Are there any major bugs?
 
-For now, there is one critical bug to be fixed ASAP: The phone's Bluetooth, at least on my H910, isn't working at all, and that problem is definitely located in the kernel, since it happens on different Android 11 ROMs lie the Lighthouse LG V20(the one i'm personally using), Lineage OS 18.1 and Superior OS Xcalibur ROMs.
+For now, there is one critical bug to be fixed ASAP: The phone's Bluetooth, at least on my H910, isn't working at all. That problem is definitely located in the kernel, since it happens on different Android 11 ROMs like the Lighthouse LG V20(the one i'm personally using), Lineage OS 18.1 and Superior OS Xcalibur ROMs.
 
-Besides that, there's also the dreaded Infrared Blaster that... works? It sends the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything after that first command. The IR Blaster's light still works all the time though.
+Besides that, there's also the dreaded Infrared Blaster, and it... works? It sends the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything else after that first command, but the IR Blaster's light still works all the time though, despite having some big delays between on/off states.
 
 The kernel also has some smaller problems mainly having to do with its inability to be compiled with CONFIG_COMPAT_VDSO enabled, but this doesn't seem to be a major problem since the kernel compiles seamlessly without it, unless it is the reason behind the Bluetooth bug, although i think thats very unlikely.
 
 ### Do you have anyone to thank for?
 
-Yes, a lot of people initially:
+I do, a lot of people initially:
 
-* My family, for supporting me through my entire journey inside and outside of programming.
+* My family for supporting me through my entire journey inside and outside of programming.
 * My teachers at UFCAT's Computer Science course, since they are the ones who helped me achieved my current level of knowledge to be able to mess with kernels.
 * My friends because of their really diverse interests that eventually helped me decide on what i actually want to do with computers in general.
 
@@ -49,4 +50,5 @@ And with that out of the way, i get to thank the people that helped me with this
 * The entire Lineage OS staff, as well as the guys keeping the V20 kernel source alive and updated.
 * Linus Torvalds, since he was and still is the foundation block of pretty much everything here.
 * flar2, tbalden and acuicultor for the implementation and improvement of the AdrenoBoost feature on oneplus 8 radioactive kernel, from which i ported it.
-* Anyone else that i may have forgot.
+* osm0sis for his AnyKernel3.
+* And anyone else that i may have forgot.
