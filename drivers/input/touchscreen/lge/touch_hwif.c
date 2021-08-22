@@ -323,7 +323,12 @@ enum touch_device_type touch_get_device_type(void)
 {
 	enum touch_device_type ret = TYPE_LG4946;
 #if defined(CONFIG_LGE_PANEL_MAKER_ID_SUPPORT)
+	
+
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wconversion"
 	ret = lge_get_panel_maker_id();
+	#pragma GCC diagnostic pop
 #elif defined(CONFIG_LGE_DISPLAY_COMMON)
 	ret = lge_get_panel();
 #endif

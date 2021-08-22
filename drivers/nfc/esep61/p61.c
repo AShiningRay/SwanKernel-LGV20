@@ -90,7 +90,7 @@ short ifs = 254;
 short headerSize = 3;
 unsigned char sof = 0xA5;
 unsigned char csSize = 1;
-static unsigned char array[];
+/*static unsigned char array[];*/
 const char C_TRANSMIT_NO_STOP_CONDITION = 0x01;
 const char C_TRANSMIT_NO_START_CONDITION = 0x02;
 const char C_TRANSMIT_NORMAL_SPI_OPERATION = 0x04;
@@ -475,9 +475,9 @@ void sendAcknowledge(struct file *filp)
 	ack[0] = 0x00;
 	ack[1] = (unsigned char)(PH_SCAL_T1_R_BLOCK | (unsigned char)(seqCounterCard << 4));
 	ack[2] = 0x00;
-	ack[3] = helperComputeLRC(ack, 0, (sizeof(ack) / sizeof(ack[0])) - 2);
+	ack[3] = helperComputeLRC(ack, 0, (sizeof(unsigned long) / sizeof(ack[0])) - 2);
 
-	send(filp, &ack, C_TRANSMIT_NORMAL_SPI_OPERATION, sizeof(ack)/sizeof(ack[0]));
+	send(filp, &ack, C_TRANSMIT_NORMAL_SPI_OPERATION, sizeof(unsigned long)/sizeof(ack[0]));
 
 	NFC_DBG_MSG(KERN_ALERT "sendAcknowledge - Exit\n");
 

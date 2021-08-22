@@ -1360,8 +1360,7 @@ static int msm_config_debugfs_get(void *data, u64 *val)
 
 static int msm_config_debugfs_set(void  *data, u64 val)
 {
-	uint32_t key = LGE_DEBUG_PANIC_ON_TIMEOUT
-			^ LGE_DEBUG_DISABLE_TIMEOUT;
+	uint32_t key = 0x02 ^ LGE_DEBUG_DISABLE_TIMEOUT;
 	if(!val) {
 		pr_err("clear all bits \n");
 		msm_debug = 0;

@@ -1749,10 +1749,9 @@ static ssize_t get_ocd(struct device *dev, int8_t *buf, u32 wdata)
 		TOUCH_I("retry = %d\n", retry);
 		if (retry != 1000)
 			touch_msleep(5);
+		
 		sw49408_reg_read(dev, d->reg_info.r_abt_sts_spi_addr
-						+ abt_rawdata_load_sts,
-						(u8 *)&rdata, sizeof(rdata));
-
+		+ abt_rawdata_load_sts, (u8 *)&rdata, sizeof(rdata));
 	} while ((rdata != 0) && retry--);
 	/* check whether 0 is written or not */
 
