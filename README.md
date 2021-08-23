@@ -4,11 +4,17 @@ SwanKernel is a kernel based on the latest Lineage OS 18.1's sources for the V20
 
 ### Which phone variants/models does this kernel support?
 
-Since it is still pretty much an Alpha, this kernel only supports the following models:
+This kernel supports the following models for now:
 
-* H910/ELSA/US996
+* `H910/H915`
+* `H918`
+* `H990`
+* `LS997`
+* `US996`
+* `VS995`
 
-But support for other models will be coming at a later date.
+
+But support for other variants of some models like the H990 will be coming at a later date.
 
 ### What are the kernels end goals?
 
