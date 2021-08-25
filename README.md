@@ -24,7 +24,7 @@ The main goal here is to have a kernel that not only has extra features and impr
 Yes, here's a list of features that both kernel variants have over stock:
 
 1. AdrenoBoost for improved GPU performance.
-2. GPU and CPU UnderVolt (2 variants of the kernel, one with stable UVs, and the other with extreme UVs, if your phone can handle).
+2. GPU and CPU UnderVolt for better power efficiency on load.
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
@@ -34,7 +34,7 @@ As for the `UVExtreme` variant, it has the following features as well:
 
 1. Stronger Undervolts (i'm talking about borderline unstable undervolts here).
 2. CPU Voltage Control if you need to setup a custom undervolt to keep it more stable and has no need to compile the kernel from source just to change the values... and that's assuming your phone even boots with this variant of the kernel.
-3. Disabled Battery BCL, eliminating power throttling caused by the battery. As long as you don't keep playing games when the battery level reaches critical levels, the phone's battery should be fine.
+3. Disabled Battery BCL, eliminating power throttling caused by the battery. As long as you don't keep playing games when the battery reaches critical levels, it should be fine.
 
 ### Great, but can i compile it from source if i need to?
 
