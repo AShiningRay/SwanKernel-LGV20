@@ -34,7 +34,6 @@ As for the `UVExtreme` variant, it has the following features as well:
 
 1. Stronger Undervolts (i'm talking about borderline unstable undervolts here).
 2. CPU Voltage Control if you need to setup a custom undervolt to keep it more stable and has no need to compile the kernel from source just to change the values... and that's assuming your phone even boots with this variant of the kernel.
-3. Disabled Battery BCL, eliminating power throttling caused by the battery. As long as you don't keep playing games when the battery reaches critical levels, it should be fine.
 
 ### Great, but can i compile it from source if i need to?
 
