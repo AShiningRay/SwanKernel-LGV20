@@ -63,7 +63,7 @@ static struct asmp_param_struct {
 	unsigned int cycle_down;
 } asmp_param = {
 	.delay = 150,
-	.scroff_single_core = true,
+	.scroff_single_core = false,
 	.max_cpus = 4,
 	.min_cpus = 2,
 	.cpufreq_up = 75,
@@ -74,7 +74,7 @@ static struct asmp_param_struct {
 
 static unsigned int cycle = 0, delay0 = 0;
 static unsigned long delay_jif = 0;
-static int enabled __read_mostly = 1;
+static int enabled __read_mostly = 0;
 
 static void __cpuinit asmp_work_fn(struct work_struct *work) {
 	unsigned int cpu = 0, slow_cpu = 0;
