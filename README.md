@@ -1,6 +1,6 @@
 # SwanKernel for the LG V20
 
-SwanKernel is a kernel based on the latest Lineage OS 18.1's sources for the V20, aiming to bring those features and updates and improve them with some extra tuning, fixing and external features tailored specifically for the LG V20.
+SwanKernel is an android kernel based on the latest Lineage OS 18.1 sources for the V20, aiming to bring those features and updates and improve them with some extra tuning, fixing and external features tailored specifically for the LG V20.
 
 ### Which phone variants/models does this kernel support?
 
@@ -15,7 +15,7 @@ This kernel supports the following models for now:
 
 But support for other variants of some models like the H990 will be coming at a later date.
 
-### What are the kernels end goals?
+### What does this kernel try to achieve?
 
 The main goal here is to have a kernel that not only has extra features and improvements, but is also clean and concise, having only features that are truly needed from a kernel that will run alongside a Android 11-based ROM. One example of that is Kcal display control, a feature that is unnecessary here since most, if not all Android 11 ROMs have LiveDisplay for that exact same purpose, and without the need to root. This helps the kernel have a small overhead and file size, as well as promote better maintainability, because i'm still a complete newbie when it comes to kernel development and compilation.
 
@@ -28,12 +28,13 @@ Yes, here's a list of features that both kernel variants have over stock:
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
-6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle.
+6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle. Off by default.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
 1. Stronger Undervolts (i'm talking about borderline unstable undervolts here).
-2. CPU Voltage Control if you need to setup a custom undervolt to keep it more stable and has no need to compile the kernel from source just to change the values... and that's assuming your phone even boots with this variant of the kernel.
+2. CPU Voltage Control if you need to setup a custom undervolt to keep it more stable and have no need to compile the kernel from source just to change the values... and that's assuming your phone even boots with this variant of the kernel.
+3. Disabled Battery BCL, eliminating power throttling caused by the battery, just be careful when running demanding tasks while having almost no battery left.
 
 ### Great, but can i compile it from source if i need to?
 
@@ -43,7 +44,7 @@ Of course, i will write a guide on how to compile this kernel soon ;)
 
 For now, there is one critical bug to be fixed ASAP: The phone's Bluetooth, at least on my H910, isn't working at all. That problem is definitely located in the kernel, since it happens on different Android 11 ROMs like the Lighthouse LG V20(the one i'm personally using), Lineage OS 18.1 and Superior OS Xcalibur ROMs.
 
-Besides that, there's also the dreaded Infrared Blaster, and it... works? The IR is able to send the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything else after that first command, but the IR Blaster's light still works all the time though, despite having some big delays between on/off states.
+Besides that, there's also the dreaded Infrared Blaster, and it... works? The IR is able to send the very first command i give to my LG TV without any problems after every reboot, but refuses to send anything else after that first command. The IR Blaster's light still works all the time though, despite having some big delays between on/off states.
 
 ### Do you have anyone to thank for?
 
