@@ -29,6 +29,7 @@ Yes, here's a list of features that both kernel variants have over stock:
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
 6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle. Off by default.
+7. Disabled CPU Boost when a finger is detected on screen, preventing unnecessary frequency boosts when no meaningful action is done other than tapping on screen and slightly scrolling around. We have Schedutil to keep it smooth anyways.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
