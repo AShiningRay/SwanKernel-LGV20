@@ -30,6 +30,7 @@ Yes, here's a list of features that both kernel variants have over stock:
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
 6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle. Off by default.
 7. Disabled CPU Boost when a finger is detected on screen, preventing unnecessary frequency boosts when no meaningful action is done other than tapping on screen and slightly scrolling around. We have Schedutil to keep it smooth anyways.
+8. USB Fast Charge.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
@@ -61,5 +62,6 @@ And with that out of the way, i get to thank the people that helped me with this
 * The entire Lineage OS staff, as well as the guys keeping the V20 kernel source alive and updated.
 * Linus Torvalds, since he was and still is the foundation block of pretty much everything here.
 * flar2, tbalden and acuicultor for the implementation and improvement of the AdrenoBoost feature on oneplus 8 radioactive kernel, from which i ported it.
+* engstk and AnGglt88 for the usb fastcharge implementation.
 * osm0sis for his AnyKernel3.
 * And anyone else that i may have forgot.
