@@ -4,7 +4,7 @@ SUBLEVEL = 113
 EXTRAVERSION =
 
 CONFIG_LOCALVERSION="-SwanKernel"
-export LOCALVERSION="-v0.7"
+export LOCALVERSION="-v0.85"
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
