@@ -399,7 +399,7 @@ static int __ref _cpu_down(unsigned int cpu, int tasks_frozen)
 	smp_mb(); /* Read from cpu_dead_idle before __cpu_die(). */
 	per_cpu(cpu_dead_idle, cpu) = false;
 
-	/*hotplug_cpu__broadcast_tick_pull(cpu);*/
+	hotplug_cpu__broadcast_tick_pull(cpu);
 	/* This actually kills the CPU. */
 	__cpu_die(cpu);
 
