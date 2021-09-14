@@ -668,3 +668,6 @@ CONFIG_ASMP=y
 
 # USB2 Fast Charge
 CONFIG_FORCE_FAST_CHARGE=y
+
+# Boeffla Wakelock Blocker
+CONFIG_BOEFFLA_WL_BLOCKER=y
