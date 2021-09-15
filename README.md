@@ -24,13 +24,15 @@ The main goal here is to have a kernel that not only has extra features and impr
 Yes, here's a list of features that both kernel variants have over stock:
 
 1. AdrenoBoost for improved GPU performance.
-2. GPU and CPU UnderVolt for better power efficiency on load.
+2. GPU and CPU Undervolt for better power efficiency on load.
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
 6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle. Off by default.
 7. Disabled CPU Boost when a finger is detected on screen, preventing unnecessary frequency boosts when no meaningful action is done other than tapping on screen and slightly scrolling around. We have Schedutil to keep it smooth anyways.
 8. USB Fast Charge.
+9. Multiple cherry-picks from different msm8996 sources with fixes and improvements to the kernel.
+10. Configurable wakelock blocker (boeffla) for roms that have some "unneeded" wakelocks enabled by default and/or users that know which wakelocks can be blocked.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
@@ -64,4 +66,5 @@ And with that out of the way, i get to thank the people that helped me with this
 * flar2, tbalden and acuicultor for the implementation and improvement of the AdrenoBoost feature on oneplus 8 radioactive kernel, from which i ported it.
 * engstk and AnGglt88 for the usb fastcharge implementation.
 * osm0sis for his AnyKernel3.
-* And anyone else that i may have forgot.
+* andip71 and his generic implementation of a wakelock blocker.
+* And anyone else that i may have forgot, especially those i cherry-picked from.
