@@ -33,6 +33,7 @@ Yes, here's a list of features that both kernel variants have over stock:
 8. USB Fast Charge.
 9. Multiple cherry-picks from different msm8996 sources with fixes and improvements to the kernel.
 10. Configurable wakelock blocker (boeffla) for roms that have some "unneeded" wakelocks enabled by default and/or users that know which wakelocks can be blocked.
+11. Dynamic FSync, giving better IO performance in general, and a massive boost to random writes without compromising data integrity by outright disabling FSync.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
