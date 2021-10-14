@@ -68,4 +68,5 @@ And with that out of the way, i get to thank the people that helped me with this
 * engstk and AnGglt88 for the usb fastcharge implementation.
 * osm0sis for his AnyKernel3.
 * andip71 and his generic implementation of a wakelock blocker.
+* tytydraco for the Anxiety IO Scheduler.
 * And anyone else that i may have forgot, especially those i cherry-picked from.
