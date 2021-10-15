@@ -17,7 +17,10 @@ But support for other variants of some models like the H990 will be coming at a 
 
 ### What does this kernel try to achieve?
 
-The main goal here is to have a kernel that not only has extra features and improvements, but is also clean and concise, having only features that are truly needed from a kernel that will run alongside a Android 11-based ROM. One example of that is Kcal display control, a feature that is unnecessary here since most, if not all Android 11 ROMs have LiveDisplay for that exact same purpose, and without the need to root. This helps the kernel have a small overhead and file size, as well as promote better maintainability, because i'm still a complete newbie when it comes to kernel development and compilation.
+The main goal here is to have a kernel that not only has extra features and improvements, but is also clean and concise, having only features that are truly needed from a kernel that will run alongside a Android 11-based ROM. One example of that is Kcal display control, a feature that is unnecessary here since most, if not all Android 11 ROMs have LiveDisplay for that exact same purpose, and without the need to root. 
+This helps the kernel have a small overhead and file size, as well as promote better maintainability, because i'm still a complete newbie when it comes to kernel development and compilation.
+
+This kernel does have a battery life bias, but will still scale up to maximum performance when needed. No Overclocking is done, for now at least.
 
 ### Does it have any features over a stock kernel?
 
@@ -26,14 +29,15 @@ Yes, here's a list of features that both kernel variants have over stock:
 1. AdrenoBoost for improved GPU performance.
 2. GPU and CPU Undervolt for better power efficiency on load.
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
-4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead. After it gets stable, this will only get better.
+4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
 6. AutoSMP CPU Hotplug to shutdown the big cores when their stronger performance isn't needed, slightly improving battery life on light loads and idle.
 7. Disabled CPU Boost when a finger is detected on screen, preventing unnecessary frequency boosts when no meaningful action is done other than tapping on screen and slightly scrolling around. We have Schedutil to keep it smooth anyways.
 8. USB Fast Charge.
 9. Multiple cherry-picks from different msm8996 sources with fixes and improvements to the kernel.
-10. Configurable wakelock blocker (boeffla) for roms that have some "unneeded" wakelocks enabled by default and/or users that know which wakelocks can be blocked.
-11. Dynamic FSync, giving better IO performance in general, and a massive boost to random writes without compromising data integrity by outright disabling FSync.
+10. Configurable wakelock blocker (boeffla) for roms that have some "unneeded" wakelocks enabled by default and/or users that know which wakelocks can be blocked for better battery life.
+11. Dynamic FSync, giving better IO performance in general and a massive boost to random writes without compromising data integrity by outright disabling FSync.
+12. Anxiety IO Scheduler enable by default, offering a read bias and lower latency in IO opeaions.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
