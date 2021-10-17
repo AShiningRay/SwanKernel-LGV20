@@ -47,7 +47,31 @@ As for the `UVExtreme` variant, it has the following features as well:
 
 ### Great, but can i compile it from source if i need to?
 
-Of course, i will write a guide on how to compile this kernel soon ;)
+Of course, the steps are fairly simple since lineage OS has a web page dedicated to pretty much every V20 model in regards to builds:
+
+For the most part, you can follow the steps outlined there until you reach the "Start the build" section.
+After sorting out the proprietary blobs, clone this kernel (any branch you like) into LINEAGEFOLDER/kernel/lge/msm8996/.
+
+Then either clone or download the "proprietary" folder on the `vendor_lge_msm8996_common` repository located here https://github.com/h0pk1do/vendor_lge_msm8996-common into LINEAGEFOLDER/vendor/lge/msm8996-common.
+
+And now get ready to enter the kernel build phase, where instead of using: 
+
+`croot`
+
+`brunch h910`
+
+To build the entirety of LOS, you will have to use one of the commands below:
+
+`make bootimage` if you want to compile the whole boot.img file or
+
+`mka kernel` if you just need the Image.gz file in order to flash it as a AnyKernel zip via recovery.
+
+
+You can also append -jX to the commands above to make the toolchain as a whole use X threads to compile the kernel, making it faster but also use a bit more memory.
+
+And as a small note, in case the compilation procedure fails with something along the lines of "Can't find Getopt/Std.pm in @INC", you will need to get this file from https://metacpan.org/dist/perl/source/lib/Getopt/Std.pm and paste it into LINEAGEFOLDER/prebuilts/tools-lineage/common/perl-base/Getopt/.
+
+There might be an easier and more efficient way to do this, but since i am quite new to the android development scene, i have no idea on hot to improve this process for now, not to mention that i might have missed a step or two while writing this "guide". So any constructive feedback is appreciated.
 
 ### Are there any major bugs?
 
@@ -71,4 +95,5 @@ And with that out of the way, i get to thank the people that helped me with this
 * osm0sis for his AnyKernel3.
 * andip71 and his generic implementation of a wakelock blocker.
 * tytydraco for the Anxiety IO Scheduler.
+* npjohnson for setting me in the right track in regards to the bluetooth problem (basically, it was a problem with the downloaded toolchains) 
 * And anyone else that i may have forgot, especially those i cherry-picked from.
