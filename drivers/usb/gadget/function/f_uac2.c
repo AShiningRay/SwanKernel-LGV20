@@ -1460,6 +1460,9 @@ struct cntrl_range_lay3 {
 struct CNTRL_RANGE_LAY3(n) {					\
 	__u16	wNumSubRanges;					\
 	__u32	dRangeAttrs[n][3];				\
+	__le32	dMIN;						\
+	__le32	dMAX;						\
+	__le32	dRES;						\
 } __packed
 
 DECLARE_CNTRL_RANGE_LAY3(CLK_FREQ_ARR_SIZE);
