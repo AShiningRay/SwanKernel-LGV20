@@ -8327,6 +8327,9 @@ EXPORT_SYMBOL(ufshcd_system_suspend);
 
 int ufshcd_system_resume(struct ufs_hba *hba)
 {
+	int ret = 0;
+	ktime_t start = ktime_get();
+
 	if (!hba)
 		return -EINVAL;
 
@@ -8361,7 +8364,7 @@ int ufshcd_runtime_suspend(struct ufs_hba *hba)
 
 	if (!hba->is_powered)
 		return 0;
-
+	return 0;
 }
 EXPORT_SYMBOL(ufshcd_runtime_suspend);
 
@@ -8989,7 +8992,7 @@ static void ufshcd_clk_scaling_resume_work(struct work_struct *work)
 static int ufshcd_devfreq_target(struct device *dev,
 				unsigned long *freq, u32 flags)
 {
-	int ret = 0;
+	int err = 0;
 	struct ufs_hba *hba = dev_get_drvdata(dev);
 	bool release_clk_hold = false;
 	unsigned long irq_flags;
@@ -9029,7 +9032,7 @@ static int ufshcd_devfreq_target(struct device *dev,
 
 	spin_lock_irqsave(hba->host->host_lock, irq_flags);
 	if (release_clk_hold)
-		__ufshcd_release(hba);
+		__ufshcd_release(hba, false); //SUSPICIOUS call right there, since this unction needs 2 arguments but only had 1
 	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
 
 	return err;
