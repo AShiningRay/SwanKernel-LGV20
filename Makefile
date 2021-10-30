@@ -390,7 +390,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -std=gnu89 -fno-builtin-bcmp \
-		   -march=armv8-a+crc+simd -D__LINUX_ARM_ARCH__=8 \
+		   -march=armv8-a+crc+simd+crypto -D__LINUX_ARM_ARCH__=8 \
 		   -funsafe-math-optimizations 
 
 KBUILD_AFLAGS_KERNEL :=
