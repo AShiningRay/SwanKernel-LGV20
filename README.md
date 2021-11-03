@@ -15,6 +15,8 @@ This kernel supports the following models for now:
 
 But support for other variants of some models like the H990 will be coming at a later date.
 
+If you are looking for the precompiled zips, they can be found at XDA [right here](https://forum.xda-developers.com/t/kernel-3-18-140-swankernel-for-the-lg-v20.4352171/).
+
 ### What does this kernel try to achieve?
 
 The main goal here is to have a kernel that not only has extra features and improvements, but is also clean and concise, having only features that are truly needed from a kernel that will run alongside a Android 11-based ROM. One example of that is Kcal display control, a feature that is unnecessary here since most, if not all Android 11 ROMs have LiveDisplay for that exact same purpose, and without the need to root. 
