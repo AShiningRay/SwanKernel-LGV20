@@ -369,12 +369,6 @@ int vote(struct votable *votable, const char *client_str, bool enabled, int val)
 
 	lock_votable(votable);
 
-#ifdef CONFIG_LGE_PM
-#ifdef CONFIG_LGE_MSM8996_ISB_WA
-	asm volatile ("isb\n");
-#endif
-#endif
-
 	client_id = get_client_id(votable, client_str);
 #ifdef CONFIG_LGE_PM
 	pr_err("%s: name[%s], client[%s,%d], enabled[%d], val[%d]\n",
