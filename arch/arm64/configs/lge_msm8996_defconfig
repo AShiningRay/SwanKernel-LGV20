@@ -48,7 +48,7 @@ CONFIG_DEFAULT_ANXIETY=y #Set Anxiety as default IO Scheduler
 CONFIG_DEFAULT_IOSCHED="anxiety" # Just to be sure
 CONFIG_LGE_HANDLE_PANIC=y
 CONFIG_LGE_HALL_IC=y
-#CONFIG_ZRAM_LZ4_COMPRESS=n - Not much of a difference when benched against LZo
+CONFIG_ZRAM_LZ4_COMPRESS=y
 CONFIG_SERIAL_MSM_HSL=y
 CONFIG_EXT4_FS_ENCRYPTION=y
 
