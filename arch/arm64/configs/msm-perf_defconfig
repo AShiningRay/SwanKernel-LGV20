@@ -677,3 +677,6 @@ CONFIG_DYNAMIC_FSYNC=y
 
 # Wireguard
 CONFIG_WIREGUARD=y
+
+# Enable CRC32 ARMv8 Hardware acceleration.
+CRYPTO_CRC32_ARM64=y
