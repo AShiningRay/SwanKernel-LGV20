@@ -2,6 +2,7 @@
 
 SwanKernel is an android kernel based on the latest Lineage OS 18.1 sources for the V20, aiming to bring those features and updates and improve them with some extra tuning, fixing and external features tailored specifically for the LG V20.
 
+This kernel is based on Linux 3.18.140, and has become EOL with the last commit, as i don't think there's anything else that can be optimized for the V20 on this source anymore.
 ### Which phone variants/models does this kernel support?
 
 This kernel supports the following models for now:
@@ -24,12 +25,14 @@ This helps the kernel have a small overhead and file size, as well as promote be
 
 This kernel does have a battery life bias, but will still scale up to maximum performance when needed. No Overclocking is done, for now at least.
 
+NOTE: It can also be flashed on older android versions, just don't expect it to have the features A11 already brings to the table like KCAL and etc.
+
 ### Does it have any features over a stock kernel?
 
 Yes, here's a list of features that both kernel variants have over stock:
 
 1. AdrenoBoost for improved GPU performance.
-2. GPU and CPU Undervolt for better power efficiency on load.
+2. GPU and CPU/Cache Undervolt for better power efficiency on load.
 3. CPU governors tuned for better battery life and thermal stability without impacting performance all that much.
 4. Almost no unnecessary debug flags on the kernel, minimizing its size and overhead.
 5. Westwood TCP Congestion Algorithm set as default in order to have better network performance and consistency.
@@ -42,6 +45,7 @@ Yes, here's a list of features that both kernel variants have over stock:
 12. Anxiety IO Scheduler enabled by default, offering a read bias and lower latency in IO operations.
 13. Updated to Linux 3.18.140 with security updates, fixes and a lot more. Some extra updates will follow.
 14. Wireguard support.
+15. Cryptographic functions optimizations, slightly improving the phone's performance when calculating hashes and so on.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
