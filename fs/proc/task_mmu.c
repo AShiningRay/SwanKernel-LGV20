@@ -128,7 +128,7 @@ static void seq_print_vma_name(struct seq_file *m, struct vm_area_struct *vma)
 	page_offset = (unsigned long)name - page_start_vaddr;
 	num_pages = DIV_ROUND_UP(page_offset + max_len, PAGE_SIZE);
 
-	seq_puts(m, "[anon:");
+	seq_write(m, "[anon:", 6);
 
 	for (i = 0; i < num_pages; i++) {
 		int len;
@@ -140,7 +140,7 @@ static void seq_print_vma_name(struct seq_file *m, struct vm_area_struct *vma)
 		pages_pinned = get_user_pages(current, mm, page_start_vaddr,
 				1, 0, 0, &page, NULL);
 		if (pages_pinned < 1) {
-			seq_puts(m, "<fault>]");
+			seq_write(m, "<fault>]\n", 9);
 			return;
 		}
 
@@ -160,7 +160,7 @@ static void seq_print_vma_name(struct seq_file *m, struct vm_area_struct *vma)
 		page_start_vaddr += PAGE_SIZE;
 	}
 
-	seq_putc(m, ']');
+	seq_write(m, "]\n", 2);
 }
 
 static void vma_stop(struct proc_maps_private *priv)
@@ -359,16 +359,19 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 		 * program uses newlines in its paths then it can kick rocks.
 		 */
 		if (size > 1) {
+			const int inlen = size - 1;
+			int outlen = inlen;
 			char *p;
 
-			p = d_path(&file->f_path, buf, size);
+			p = d_path_outlen(&file->f_path, buf, &outlen);
 			if (!IS_ERR(p)) {
 				size_t len;
 
-				/* Minus one to exclude the NUL character */
-				len = size - (p - buf) - 1;
-				if (likely(p > buf))
-					memmove(buf, p, len);
+				if (outlen != inlen)
+					len = inlen - outlen - 1;
+				else
+					len = strlen(p);
+				memmove(buf, p, len);
 				buf[len] = '\n';
 				seq_commit(m, len + 1);
 				return;
@@ -389,32 +392,31 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 	name = arch_vma_name(vma);
 	if (!name) {
 		if (!mm) {
-			name = "[vdso]";
-			goto done;
+			seq_write(m, "[vdso]\n", 7);
+			return;
 		}
 
 		if (vma->vm_start <= mm->brk &&
 		    vma->vm_end >= mm->start_brk) {
-			name = "[heap]";
-			goto done;
+			seq_write(m, "[heap]\n", 7);
+			return;
 		}
 
 		if (is_stack(priv, vma)) {
-			name = "[stack]";
-			goto done;
+			seq_write(m, "[stack]\n", 8);
+			return;
 		}
 
 		if (vma_get_anon_name(vma)) {
-			seq_pad(m, ' ');
 			seq_print_vma_name(m, vma);
+			return;
 		}
 	}
 
 done:
-	if (name) {
-		seq_pad(m, ' ');
+	if (name) 
 		seq_puts(m, name);
-	}
+	
 	seq_putc(m, '\n');
 }
 
