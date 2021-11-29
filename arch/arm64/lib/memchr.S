@@ -61,7 +61,6 @@ L(byte_loop):
 	cmp	cur_byte, chrin
 	b.ne	L(byte_loop)
 	sub	srcin, srcin, #1
->>>>>>> c2692cc9fd5d (arm64: Better optimised memchr())
 	ret
 L(found_word):
 CPU_LE(	rev	tmp, tmp)
