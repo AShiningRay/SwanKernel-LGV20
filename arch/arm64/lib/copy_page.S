@@ -26,15 +26,10 @@
  *	x0 - dest
  *	x1 - src
  */
-SYM_FUNC_START_PI(copy_page)
-alternative_if ARM64_HAS_NO_HW_PREFETCH
-	// Prefetch three cache lines ahead.
-	prfm	pldl1strm, [x1, #128]
-	prfm	pldl1strm, [x1, #256]
-	prfm	pldl1strm, [x1, #384]
-alternative_else_nop_endif
-
-	ldp	x2, x3, [x1]
+ENTRY(copy_page)
+	/* Assume cache line size is 64 bytes. */
+	prfm	pldl1strm, [x1, #64]
+1:	ldp	x2, x3, [x1]
 	ldp	x4, x5, [x1, #16]
 	ldp	x6, x7, [x1, #32]
 	ldp	x8, x9, [x1, #48]
@@ -48,4 +43,4 @@ alternative_else_nop_endif
 	tst	x1, #(PAGE_SIZE - 1)
 	b.ne	1b
 	ret
-SYM_FUNC_END_PI(copy_page)
+ENDPROC(copy_page)
