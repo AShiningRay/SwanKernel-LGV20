@@ -537,7 +537,7 @@
 			reg = <0x1700 0x100>;
 			regulator-name = "pmi8994_s2";
 			regulator-min-microvolt = <400000>;
-			regulator-max-microvolt = <1015000>;
+			regulator-max-microvolt = <840000>;
 			qcom,enable-time = <500>;
 		};
 	};
@@ -556,7 +556,7 @@
 			reg = <0x1700 0x100>;
 			regulator-name = "pm8004_s2";
 			regulator-min-microvolt = <400000>;
-			regulator-max-microvolt = <1015000>;
+			regulator-max-microvolt = <840000>;
 			qcom,enable-time = <500>;
 			status = "disabled";
 		};
@@ -607,7 +607,7 @@
 		qcom,cpr-enable;
 		qcom,cpr-clock-throttling = <0x20>;
 
-		qcom,cpr-aging-ref-voltage = <905000>;
+		qcom,cpr-aging-ref-voltage = <840000>;
 
 		thread@0 {
 			qcom,cpr-thread-id = <0>;
@@ -1962,7 +1962,7 @@
 
 		qcom,cpr-enable;
 
-		qcom,cpr-aging-ref-voltage = <905000>;
+		qcom,cpr-aging-ref-voltage = <840000>;
 
 		thread@0 {
 			qcom,cpr-thread-id = <0>;
@@ -1983,8 +1983,8 @@
 				qcom,cpr-corner-fmax-map = <1 3 5 8>;
 
 				qcom,cpr-voltage-ceiling =
-					<400000  500000  585000  650000  690000
-					 750000  780000  845000>;
+					<400000  500000  550000  610000  650000
+					 710000  740000  840000>;
 				qcom,cpr-voltage-floor =
 					<400000  480000  480000  480000  480000
 					 480000  480000  480000>;
