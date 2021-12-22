@@ -41,11 +41,10 @@ Yes, here's a list of features that both kernel variants have over stock:
 8. USB Fast Charge.
 9. Multiple cherry-picks from different msm8996 sources with fixes and improvements to the kernel.
 10. Configurable wakelock blocker (boeffla) for roms that have some "unneeded" wakelocks enabled by default and/or users that know which wakelocks can be blocked for better battery life.
-11. Dynamic FSync, giving better IO performance in general and a massive boost to random writes without compromising data integrity by outright disabling FSync.
-12. Anxiety IO Scheduler enabled by default, offering a read bias and lower latency in IO operations.
-13. Updated to Linux 3.18.140 with security updates, fixes and a lot more. Some extra updates will follow.
-14. Wireguard support.
-15. Cryptographic functions optimizations, slightly improving the phone's performance when calculating hashes and so on.
+11. Anxiety IO Scheduler enabled by default, offering a read bias and lower latency in IO operations.
+12. Updated to Linux 3.18.140 with security updates, fixes and a lot more. Some extra updates will follow.
+13. Wireguard support.
+14. Cryptographic functions optimizations, slightly improving the phone's performance when calculating hashes and so on.
 
 As for the `UVExtreme` variant, it has the following features as well:
 
