@@ -17,6 +17,7 @@ KERNEL_NAME="SwanKernel"
 GCC_AARCH64=$HOME/toolchains/aarch64-elf/bin/aarch64-none-elf-
 GCC_ARM32=$HOME/toolchains/arm-eabi/bin/arm-none-eabi-
 MODEL_ARRAY=("h850" "h830" "rs988" "h870" "us997" "h872" "h910" "h918" "h990" "ls997" "us996" "vs995")
+$DTC="" # This one is optional
 # You can automatize the get_variant call by adding your model below
 SELECTED_MODEL=""
 
