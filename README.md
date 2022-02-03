@@ -54,31 +54,26 @@ As for the `UVExtreme` variant, it has the following features as well:
 
 ### Great, but can i compile it from source if i need to?
 
-Of course, the steps are fairly simple since lineage OS has a web page dedicated to pretty much every V20 model in regards to builds:
+Yes, you can, and it's really simple. One upon a time this kernel relied on lineage's tools to be compiled, but now you can use a much more simplified setup, akin to other kernels like mk2000. So basically, here's what you need to do after cloning this repository:
 
-For the most part, you can follow the steps outlined there until you reach the "Start the build" section.
-After sorting out the proprietary blobs, clone this kernel (any branch you like) into LINEAGEFOLDER/kernel/lge/msm8996/.
+* Must be running linux (windows probably works, but i don't use it so i have no idea about the steps necessary to compile it there)
 
-Then either clone or download the "proprietary" folder on the `vendor_lge_msm8996_common` repository located here https://github.com/h0pk1do/vendor_lge_msm8996-common into LINEAGEFOLDER/vendor/lge/msm8996-common.
+* If you're on a Debian-based distro, you need the build-essential package, and if on Arch-based, you need the base-devel package. Other distros might have a different package, or not even have one like those at all.
 
-And now get ready to enter the kernel build phase, where instead of using: 
+* You will need arm's aarch64 and aarch32 toolchains. They can be found here: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads. To compile the kernel, both the `aarch64-none-elf` and `arm-none-eabi` toolchains are needed, so download both and extract them somewhere easy to find.
 
-`croot`
+* Open the `build.sh` file and point the `GCC_AARCH64` and `GCC_ARM32` variables to the directory where you extracted each toolchain
 
-`brunch h910`
+* (Optional) You can also point the `DTC` variable to your custom DTC parser, but that's rarely needed, only do it if the kernel doesn't compile without it.
 
-To build the entirety of LOS, you will have to use one of the commands below:
+* With the toolchains in place in the script, open a terminal window on the kernel's root folder and execute `./build.sh`. The rest should be pretty straightforward as the script is very user-friendly.
 
-`make bootimage` if you want to compile the whole boot.img file or
+* After the kernel is compiled, you will have to get its Image.gz-dtb file (the script shows where it's usually placed), place it on the root of an AnyKernel template folder. (If you don't have one, you can clone it from here: https://github.com/osm0sis/AnyKernel3)
 
-`mka kernel` if you just need the Image.gz file in order to flash it as a AnyKernel zip via recovery.
+* After that, just alter its anykernel.sh to check for devices, android versions and maybe even give the kernel a custom banner, and lastly, zip it by running `zip -r9 ../zipname.zip * -x *placeholder` on the root of the AnyKernel folder and you should get a flashable zip.
 
+* Flash it on the device of your choice and if everything's okay, it should boot.
 
-You can also append -jX to the commands above to make the toolchain as a whole use X threads to compile the kernel, making it faster but also use a bit more memory.
-
-And as a small note, in case the compilation procedure fails with something along the lines of "Can't find Getopt/Std.pm in @INC", you will need to get this file from https://metacpan.org/dist/perl/source/lib/Getopt/Std.pm and paste it into LINEAGEFOLDER/prebuilts/tools-lineage/common/perl-base/Getopt/.
-
-There might be an easier and more efficient way to do this, but since i am quite new to the android development scene, i have no idea on hot to improve this process for now, not to mention that i might have missed a step or two while writing this "guide". So any constructive feedback is appreciated.
 
 ### Are there any major bugs?
 
