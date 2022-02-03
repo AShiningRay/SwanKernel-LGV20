@@ -1,22 +1,18 @@
-# SwanKernel for the LG V20
+# SwanKernel for the LG V20, G5 and G6 family of devices.
 
-SwanKernel is an android kernel based on the latest Lineage OS 18.1 sources for the V20, aiming to bring those features and updates and improve them with some extra tuning, fixing and external features tailored specifically for the LG V20.
+SwanKernel is an android kernel based on the latest Lineage OS 18.1 sources for the LG msm8996 phones, aiming to bring those features and updates and improve them with some extra tuning, fixing and external features tailored specifically for them.
 
-This kernel is based on Linux 3.18.140, and has become EOL with the last commit, as i don't think there's anything else that can be optimized for the V20 on this source anymore.
+This kernel is based on Linux 3.18.140 and has become EOL, as i don't think there's anything else that can be optimized on this source anymore. i might do some minor improvements here and there, but nothing major.
+
 ### Which phone variants/models does this kernel support?
 
-This kernel supports the following models for now:
+This kernel supports the following models:
 
-* `H910/H915`
-* `H918`
-* `H990`
-* `LS997`
-* `US996`
-* `VS995`
+* G5  -> `H850, H830, RS988`
+*	G6  -> `H870, US997, H872`
+*	V20 -> `H910, H918, H990, LS997, US996, VS995`
 
-But support for other variants of some models like the H990 will be coming at a later date.
-
-If you are looking for the precompiled zips, they can be found at XDA [right here](https://forum.xda-developers.com/t/kernel-3-18-140-swankernel-for-the-lg-v20.4352171/).
+If you are looking for the precompiled zips, they can be found at XDA [right here](https://forum.xda-developers.com/t/kernel-3-18-140-swankernel-for-the-lg-v20.4352171/).(LG V20 only)
 
 ### What does this kernel try to achieve?
 
@@ -90,7 +86,7 @@ I do, a lot of people initially:
 And with that out of the way, i get to thank the people that helped me with this kernel, even if indirectly, so... a lot more people:
 * lybxlpsv for his customized kernel and general knowledge about the phone's performance posted on XDA Developers.
 * xxseva for his amazing Lighthouse V20 ROM, which is the main testbed for this kernel.
-* The entire Lineage OS staff, as well as the guys keeping the V20 kernel source alive and updated.
+* The entire Lineage OS staff, as well as the guys keeping the LG 8996 kernel source alive and updated.
 * Linus Torvalds, since he was and still is the foundation block of pretty much everything here.
 * flar2, tbalden and acuicultor for the implementation and improvement of the AdrenoBoost feature on oneplus 8 radioactive kernel, from which i ported it.
 * engstk and AnGglt88 for the usb fastcharge implementation.
