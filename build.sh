@@ -1,109 +1,295 @@
 #!/bin/bash
-# As of now, the script always does a clean build. I still need to change a few things.
+#
+# Stock kernel for LG Electronics msm8996 devices build script by jcadduono
+# -(heavily)modified by stendro
+#
+############################# BEFORE STARTING #############################
+#
+# download a working toolchain and extract it somewhere and configure this
+# file to point to the toolchain's root directory.
+#
+# once you've set up the config section how you like it, you can simply run
+# ./build.sh [VARIANT] [OPTION]
+#
+# *Options are: STOCK (for stock kernel build)
+#
+################################ VARIANTS ################################
+#
+# H850		= International (Global)
+#		LGH850   (LG G5)
+#
+# H830		= T-Mobile (US)
+#		LGH830   (LG G5)
+#
+# RS988		= Unlocked (US)
+#		LGRS988  (LG G5)
+#
+#   *************************
+#
+# H910		= AT&T (US)
+#		LGH910   (LG V20)
+#
+# H915		= Canada (CA)
+#		LGH915   (LG V20)
+#
+# H918		= T-Mobile (US)
+#		LGH918   (LG V20)
+#
+# US996		= US Cellular & Unlocked (US)
+#		LGUS996  (LG V20)
+#
+# US996Dirty	= US Cellular & Unlocked (US)
+#		LGUS996  (LG V20) (Unlocked with Engineering Bootloader)
+#
+# VS995		= Verizon (US)
+#		LGVS995  (LG V20)
+#
+# H990DS	= International (Global)
+#		LGH990   (LG V20)
+#
+# H990TR	= Turkey (TR)
+#		LGH990   (LG V20)
+#
+# LS997		= Sprint (US)
+#		LGLS997  (LG V20)
+#
+# F800K/L/S	= Korea (KR)
+#		LGF800   (LG V20)
+#
+#   *************************
+#
+# H870		= International (Global)
+#		LGH870   (LG G6)
+#
+# US997		= US Cellular & Unlocked (US)
+#		US997    (LG G6)
+#
+# H872		= T-Mobile (US)
+#		LGH872   (LG G6)
+#
+################################# CONFIG #################################
 
-# Sets some shortcuts for terminal colors to spice things up
+# root directory of this kernel (this script's location)
+RDIR=$(pwd)
+
+# build dir
+BDIR=build
+
+# version file
+VFIL=VERSION
+
+# expand version
+VER=$(cat $RDIR/$VFIL)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ------------------------- BUILD CONFIG OPTIONS -------------------------
+#
+# "user"@"host"
+KBUSER=stendro
+KBHOST=github
+
+# ccache: yes or no
+USE_CCACHE=no
+
+# select cpu threads
+THREADS=$(grep -c "processor" /proc/cpuinfo)
+
+# directory containing cross-compiler
+# a newer toolchain (gcc8+) is recommended due to changes made
+# to the kernel.
+GCC_COMP=$HOME/mk2000/toolchain/gcc12/aarch64-elf/bin/aarch64-elf-
+# directory containing 32bit cross-compiler for CONFIG_COMPAT_VDSO
+GCC_COMP_32=$HOME/mk2000/toolchain/gcc12/arm-eabi/bin/arm-eabi-
+
+# -------------------------------- END -----------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# compiler version
+# gnu gcc or newer arm (linaro) gcc
+if $(${GCC_COMP}gcc --version | grep -q '(GCC)'); then
+GCC_STRING=$(${GCC_COMP}gcc --version | head -n1 | cut -f2 -d')')
+GCC_VER="GCC$GCC_STRING"
+else # old linaro gcc
+GCC_VER="$(${GCC_COMP}gcc --version | head -n1 | cut -f1 -d')' | \
+	cut -f2 -d'(')"
+if $(echo $GCC_VER | grep -q '~dev'); then
+  GCC_VER="$(echo $GCC_VER | cut -f1 -d'~')+"
+fi
+fi
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# --------------------------- RIGID PORTION ------------------------------
+#
+# color codes
 COLOR_N="\033[0m"
 COLOR_R="\033[0;31m"
 COLOR_G="\033[1;32m"
-COLOR_B="\033[0;34m"
-COLOR_C="\033[0;36m"
 COLOR_Y="\033[1;33m"
-COLOR_LP="\033[1;35m"
+COLOR_P="\033[1;35m"
 
+ABORT() {
+	echo -e $COLOR_R"Error: $*"
+	exit 1
+}
 
-# This is where the paths for your compiler layout go, as well as the kernel's name.
-KERNEL_NAME="SwanKernel"
-DTC="" # This one is optional, usually has the following path on Arch-based: /var/lib/snapd/snap/bin/dtc
-GCC_AARCH64=$HOME/toolchains/aarch64-elf/bin/aarch64-none-elf-
-GCC_ARM32=$HOME/toolchains/arm-eabi/bin/arm-none-eabi-
-MODEL_ARRAY=("h850" "h830" "rs988" "h870" "us997" "h872" "h910" "h918" "h990" "ls997" "us996" "vs995")
-# You can automatize the get_variant call by adding your model below
-SELECTED_MODEL=""
+export ARCH=arm64
+export KBUILD_BUILD_USER=$KBUSER
+export KBUILD_BUILD_HOST=$KBHOST
+export LOCALVERSION="-${VER}"
+if [ "$USE_CCACHE" = "yes" ]; then
+  export CROSS_COMPILE="ccache $GCC_COMP"
+  export CROSS_COMPILE_ARM32="ccache $GCC_COMP_32"
+else
+  export CROSS_COMPILE=$GCC_COMP
+  export CROSS_COMPILE_ARM32=$GCC_COMP_32
+fi
 
-GET_VARIANT() {
-	if [[ ${SELECTED_MODEL} = "" ]]; then
-		echo -e "List of available variants:"
-		echo -e "G5  -> [$COLOR_C H850, H830, RS988 $COLOR_N]"
-		echo -e "G6  -> [$COLOR_C H870, US997, H872 $COLOR_N]"
-		echo -e "V20 -> [$COLOR_C H910, H918, H990, LS997, US996, VS995 $COLOR_N]"
-		read -p "Please select your model:" SELECTED_MODEL
+# selected device
+[ "$1" ] && DEVICE=$1
+[ "$DEVICE" ] || ABORT "No device specified!"
+
+# setup stock configuration
+[ "$2" = STOCK ] && MAKE_STOCK=yes && \
+	echo -e $COLOR_R"Stock build selected!"
+if [ "$MAKE_STOCK" = "yes" ]; then
+  STOCK_CONFIG=arch/$ARCH/configs/stock_config
+  export LOCALVERSION="-${VER}-STOCK"
+fi
+
+# link device name to lg config files
+if [ "$DEVICE" = "H850" ]; then
+  DEVICE_DEFCONFIG=lineageos_h850_defconfig
+elif [ "$DEVICE" = "H830" ]; then
+  DEVICE_DEFCONFIG=lineageos_h830_defconfig
+elif [ "$DEVICE" = "RS988" ]; then
+  DEVICE_DEFCONFIG=lineageos_rs988_defconfig
+elif [ "$DEVICE" = "H870" ]; then
+  DEVICE_DEFCONFIG=lineageos_h870_defconfig
+elif [ "$DEVICE" = "H872" ]; then
+  DEVICE_DEFCONFIG=lineageos_h872_defconfig
+elif [ "$DEVICE" = "US997" ]; then
+  DEVICE_DEFCONFIG=lineageos_us997_defconfig
+elif [ "$DEVICE" = "H918" ]; then
+  DEVICE_DEFCONFIG=lineageos_h918_defconfig
+elif [ "$DEVICE" = "H910" ]; then
+  DEVICE_DEFCONFIG=lineageos_h910_defconfig
+elif [ "$DEVICE" = "H990" ]; then
+  DEVICE_DEFCONFIG=lineageos_h990_defconfig
+elif [ "$DEVICE" = "US996" ]; then
+  DEVICE_DEFCONFIG=lineageos_us996_defconfig
+elif [ "$DEVICE" = "US996Dirty" ]; then
+  DEVICE_DEFCONFIG=lineageos_us996-dirty_defconfig
+elif [ "$DEVICE" = "VS995" ]; then
+  DEVICE_DEFCONFIG=lineageos_vs995_defconfig
+elif [ "$DEVICE" = "LS997" ]; then
+  DEVICE_DEFCONFIG=lineageos_ls997_defconfig
+else
+  ABORT "Invalid device specified! Make sure to use upper-case."
+fi
+
+# check for stuff
+[ -f "$RDIR/arch/$ARCH/configs/${DEVICE_DEFCONFIG}" ] \
+	|| ABORT "$DEVICE_DEFCONFIG not found in $ARCH configs!"
+
+[ -x "${GCC_COMP}gcc" ] \
+	|| ABORT "Cross-compiler not found at: ${GCC_COMP}gcc"
+
+[ -x "${GCC_COMP_32}gcc" ] \
+	|| echo -e $COLOR_R"32-bit compiler not found, required for COMPAT_VDSO."
+
+if [ "$USE_CCACHE" = "yes" ]; then
+	command -v ccache >/dev/null 2>&1 \
+	|| ABORT "Do you have ccache installed?"
+fi
+
+if [ -f "$BDIR/DEVICE" ] && \
+	[ "$(cat $BDIR/DEVICE)" = "$DEVICE" ]; then
+	ASK_CLEAN=yes
+fi
+
+# build commands
+CLEAN_BUILD() {
+	echo -e $COLOR_G"Cleaning build folder..."$COLOR_N
+	rm -rf $BDIR && sleep 5
+}
+
+SETUP_BUILD() {
+	echo -e $COLOR_G"Creating kernel config..."$COLOR_N
+	mkdir -p $BDIR
+	echo "$DEVICE" > $BDIR/DEVICE \
+		|| echo -e $COLOR_R"Failed to reflect device!"
+	make -C "$RDIR" O=$BDIR "$DEVICE_DEFCONFIG" \
+		|| ABORT "Failed to set up build."
+	if [ "$MAKE_STOCK" = "yes" ]; then
+	  cat $STOCK_CONFIG >> $BDIR/.config
+	  make -C "$RDIR" O=$BDIR olddefconfig \
+		|| ABORT "Failed to set up stock config."
 	fi
+}
 
-	# This checks if the user's model is supported by the kernel.
-	if [[ " ${MODEL_ARRAY[*]} " == *" ${SELECTED_MODEL,,} "* ]];	then
-		SHOW_PATHS
+BUILD_KERNEL() {
+	echo -e $COLOR_G"Compiling kernel..."$COLOR_N
+	TIMESTAMP1=$(date +%s)
+	while ! make -C "$RDIR" O=$BDIR -j"$THREADS"; do
+		read -rp "Build failed. Retry? " do_retry
+		case $do_retry in
+			Y|y) continue ;;
+			*) ABORT "Compilation discontinued." ;;
+		esac
+	done
+	TIMESTAMP2=$(date +%s)
+	BSEC=$((TIMESTAMP2-TIMESTAMP1))
+	BTIME=$(printf '%02dm:%02ds' $(($BSEC/60)) $(($BSEC%60)))
+}
+
+INSTALL_MODULES() {
+	grep -q 'CONFIG_MODULES=y' $BDIR/.config || return 0
+	echo -e $COLOR_G"Installing kernel modules..."$COLOR_N
+	make -C "$RDIR" O=$BDIR \
+		INSTALL_MOD_PATH="." \
+		INSTALL_MOD_STRIP=1 \
+		modules_install
+	rm $BDIR/lib/modules/*/build $BDIR/lib/modules/*/source
+}
+
+PREPARE_NEXT() {
+	if grep -q 'KERNEL_COMPRESSION_LZ4=y' $BDIR/.config; then
+	  echo lz4 > $BDIR/COMPRESSION \
+		|| echo -e $COLOR_R"Failed to reflect compression method!"
 	else
-		echo -e "${COLOR_R}Your model wasn't found. Please check for errors.${COLOR_N}"
-		exit 1
+	  echo gz > $BDIR/COMPRESSION \
+		|| echo -e $COLOR_R"Failed to reflect compression method!"
 	fi
+	git log --oneline -50 > $BDIR/GITCOMMITS \
+		|| echo -e $COLOR_R"Failed to reflect commit log!"
 }
 
-SHOW_PATHS(){
-	echo -e $COLOR_G
-	echo "Printing all compiler paths and the kernel's info:"
-	echo "DTC_EXT(optional): $DTC"
-	echo "CLANG_TRIPLE: disabled (not needed for now)"
-	echo "GCC_CC_AARCH64: $GCC_AARCH64"
-	echo "GCC_CC_ARM32: $GCC_ARM32"
-	echo "CLANG_CC: disabled (not needed for now)"	
-	echo "KERNEL_NAME: $KERNEL_NAME"
-	echo "PHONE_VARIANT:${SELECTED_MODEL,,} (forced to lowercase to load the correct defconfig)"
-	echo -e $COLOR_N
-	echo ""
-	echo "Waiting 3 seconds before compiling..."
-	sleep 3
+cd "$RDIR" || ABORT "Failed to enter $RDIR!"
+echo -e $COLOR_G"Building ${DEVICE} ${VER}..."
+echo -e $COLOR_P"Using $GCC_VER..."
+if [ "$USE_CCACHE" = "yes" ]; then
+  echo -e $COLOR_P"Using CCACHE..."
+fi
 
-	CHECK_CLEAN
-}
-
-CHECK_CLEAN(){
-	if [ -f "$(pwd)/KernelOut/.config" ]; then
-		while true; do
-		    	echo -e $COLOR_Y
-		    	echo -e "There's already a previous build config, you can opt to do a clean build."
-		    	echo -e "If you opt not to, only the changed files from last build will be recompiled. " 
-			read -p "Would you like to do a clean build (y or n)? " yn
-		    	echo -e $COLOR_N
-		    	case $yn in
-		      		[Yy]* ) CLEAN_BUILD && break ;;
-		      		[Nn]* ) BUILD_KERNEL && break ;;
-		      		* ) echo -e $COLOR_R"Please answer either y or n" $COLOR_N ;;
-		    	esac
-		done
-	else
-		echo -e $COLOR_C"No previous build folder found, doing a clean build..." $COLOR_N
-		BUILD_KERNEL
-	fi
-}
-
-CLEAN_BUILD(){
-	echo -e $COLOR_LP"Cleaning build folder..."$COLOR_N
-
-	rm -rf KernelOut
-	mkdir KernelOut
-	make O=KernelOut/ clean
-	make O=KernelOut/ mrproper
-
-	echo -e $COLOR_LP"Build folder was cleaned!"$COLOR_N
-
-	BUILD_KERNEL
-}
-
-BUILD_KERNEL(){
-	echo -e $COLOR_C"\n\nBeginning compilation for ${SELECTED_MODEL,,}...\n\n" $COLOR_N
-	make O=KernelOut/ ARCH=arm64 lineageos_${SELECTED_MODEL,,}_defconfig
-	if ! make -j$(nproc --all) O=KernelOut/ \
-	KBUILD_BUILD_VERSION=$KERNEL_NAME \
-	DTC_EXT=$DTC \
-	ARCH=arm64 \
-	CROSS_COMPILE=$GCC_AARCH64 \
-	CROSS_COMPILE_ARM32=$GCC_ARM32 ; then
-		echo -e $COLOR_R"\nThe kernel couldn't be compiled... check for errors above.\n"$COLOR_N
-		exit 1
-	fi
-
-	echo -e $COLOR_C"\nThe kernel has been compiled successfully!\n"$COLOR_N
-}
-
-# This is how you call a function to start the script execution, it must outside of all other functions.
-GET_VARIANT
+# ask before cleaning if device
+# is the same as previous build
+if [ "$ASK_CLEAN" = "yes" ]; then
+  while true; do
+    echo -e $COLOR_Y
+    read -p "Same device as last build. Do you wish clean the build directory?" yn
+    echo -e $COLOR_N
+    case $yn in
+      [Yy]* ) CLEAN_BUILD && break ;;
+      [Nn]* ) break ;;
+      * ) echo -e $COLOR_R"Please answer y or n"$COLOR_N ;;
+    esac
+  done
+else
+CLEAN_BUILD
+fi
+SETUP_BUILD
+BUILD_KERNEL
+INSTALL_MODULES
+PREPARE_NEXT
+echo -e $COLOR_G"Finished building ${DEVICE} ${VER} -- Kernel compilation took"$COLOR_R $BTIME
+echo -e $COLOR_P"Run ./copy_finished.sh to create AnyKernel zip."

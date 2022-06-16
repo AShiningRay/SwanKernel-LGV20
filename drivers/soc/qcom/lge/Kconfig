@@ -517,6 +517,14 @@ config LGE_MSM8996_ENABLE_VENDOR
 	help
 	  Enables the /vendor partition in device-tree fstab
 
+config LGE_STOCK
+	bool "Support LG stock Android"
+	depends on MACH_LGE
+	default n
+	help
+	  Enable support for LG stock Android roms. This option will disable
+	  support for custom roms.
+
 endmenu
 
 source "drivers/soc/qcom/lge/power/Kconfig"
