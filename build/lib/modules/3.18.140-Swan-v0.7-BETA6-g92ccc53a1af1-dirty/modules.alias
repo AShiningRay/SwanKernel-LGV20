@@ -1,5 +1,0 @@
-# Aliases extracted from modules themselves.
-alias crypto-ansi_cprng ansi_cprng
-alias ansi_cprng ansi_cprng
-alias crypto-stdrng ansi_cprng
-alias stdrng ansi_cprng

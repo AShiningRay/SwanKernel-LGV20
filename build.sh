@@ -89,7 +89,7 @@ KBUSER=stendro
 KBHOST=github
 
 # ccache: yes or no
-USE_CCACHE=yes
+USE_CCACHE=no
 
 # select cpu threads
 THREADS=$(grep -c "processor" /proc/cpuinfo)
