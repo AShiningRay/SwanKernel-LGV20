@@ -53,6 +53,11 @@ Module.symvers
 /debian/
 
 #
+# Build output directory
+#
+/KernelOut/
+
+#
 # git files that we don't want to ignore even it they are dot-files
 #
 !.gitignore
