@@ -176,7 +176,7 @@ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, field ## _show, field ## _store);
 
 LGE_ID_ATTR(vendor_id, "%04X\n")
 LGE_ID_ATTR(factory_pid, "%04X\n")
-LGE_ID_ATTR(iSerialNumber, "%X\n")
+LGE_ID_ATTR(iSerialNumber, "%d\n")
 LGE_RDONLY_STRING_ATTR(product_name, product)
 LGE_RDONLY_STRING_ATTR(manufacturer_name, manufacturer)
 LGE_RDONLY_STRING_ATTR(fcomposition, fcomposition)

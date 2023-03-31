@@ -944,6 +944,7 @@ static int mdss_mdp_put_img(struct mdss_mdp_img_data *data, bool rotator,
 	} else if (!IS_ERR_OR_NULL(data->srcp_dma_buf)) {
 		pr_debug("ion hdl=%pK buf=0x%pa\n", data->srcp_dma_buf,
 							&data->addr);
+		MDSS_XLOG(data->srcp_dma_buf, &data->addr, data->mapped); //QCT debug patch for SMMU fault issue
 		if (!iclient) {
 			pr_err("invalid ion client\n");
 			return -ENOMEM;
@@ -1110,9 +1111,7 @@ static int mdss_mdp_get_img(struct msmfb_data *img,
 		pr_debug("mem=%d ihdl=%pK buf=0x%pa len=0x%lx\n",
 			 img->memory_id, data->srcp_dma_buf, &data->addr,
 			 data->len);
-#ifdef QCT_MM_NOC_PATCH
-		MDSS_XLOG(img->memory_id, data->srcp_dma_buf, &data->addr, data->len);
-#endif
+		MDSS_XLOG(img->memory_id, data->srcp_dma_buf, &data->addr, data->len); //QCT debug patch for SMMU fault issue
 	} else {
 		mdss_mdp_put_img(data, rotator, dir);
 		return ret ? : -EOVERFLOW;

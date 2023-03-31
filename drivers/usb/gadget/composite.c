@@ -163,7 +163,7 @@ int config_ep_by_speed(struct usb_gadget *g,
 
 ep_found:
 	/* commit results */
-	_ep->maxpacket = usb_endpoint_maxp(chosen_desc);
+	_ep->maxpacket = usb_endpoint_maxp(chosen_desc) & 0x7ff;
 	_ep->desc = chosen_desc;
 	_ep->comp_desc = NULL;
 	_ep->maxburst = 0;
@@ -2321,8 +2321,12 @@ composite_suspend(struct usb_gadget *gadget)
 
 	cdev->suspended = 1;
 	spin_unlock_irqrestore(&cdev->lock, flags);
-
+#ifndef CONFIG_LGE_USB_G_ANDROID
 	usb_gadget_vbus_draw(gadget, 2);
+#endif
+#ifdef CONFIG_LGE_USB_BC_12_VZW
+	usb_gadget_vbus_draw(gadget, 100);
+#endif
 }
 
 static void

@@ -33,6 +33,9 @@
 #include <linux/usb/ch9.h>
 #include <linux/usb/composite.h>
 #include <linux/usb/gadget.h>
+#ifdef CONFIG_LGE_USB_FACTORY
+#include <soc/qcom/lge/board_lge.h>
+#endif
 
 #include "debug.h"
 #include "core.h"
@@ -1923,6 +1926,9 @@ static int dwc3_gadget_run_stop(struct dwc3 *dwc, int is_on, int suspend)
 	u32			reg;
 	u32			timeout = 500;
 	ktime_t start, diff;
+#ifdef CONFIG_LGE_USB_FACTORY
+	enum lge_boot_mode_type boot_mode;
+#endif
 
 	reg = dwc3_readl(dwc->regs, DWC3_DCTL);
 	if (is_on) {
@@ -2011,6 +2017,17 @@ static int dwc3_gadget_run_stop(struct dwc3 *dwc, int is_on, int suspend)
 		udelay(1);
 	} while (1);
 
+#ifdef CONFIG_LGE_USB_FACTORY
+	boot_mode = lge_get_boot_mode();
+	if ((boot_mode == LGE_BOOT_MODE_QEM_130K ||
+		boot_mode == LGE_BOOT_MODE_PIF_130K) && is_on) {
+		reg = dwc3_readl(dwc->regs, DWC3_DCFG);
+		reg &= ~(DWC3_DCFG_SPEED_MASK);
+		reg |= DWC3_DCFG_FULLSPEED2;
+		dwc3_writel(dwc->regs, DWC3_DCFG, reg);
+	}
+#endif
+
 	dev_vdbg(dwc->dev, "gadget %s data soft-%s\n",
 			dwc->gadget_driver
 			? dwc->gadget_driver->function : "no-function",
@@ -2066,9 +2083,13 @@ static int dwc3_gadget_pullup(struct usb_gadget *g, int is_on)
 	ret = dwc3_gadget_run_stop(dwc, is_on, false);
 
 	spin_unlock_irqrestore(&dwc->lock, flags);
-
+#ifndef CONFIG_LGE_USB_G_ANDROID
 	pm_runtime_mark_last_busy(dwc->dev);
 	pm_runtime_put_autosuspend(dwc->dev);
+#else
+	pm_runtime_put(dwc->dev);
+#endif
+
 	dbg_event(0xFF, "Pullup put",
 		atomic_read(&dwc->dev->power.usage_count));
 
@@ -3027,9 +3048,9 @@ static void dwc3_gadget_reset_interrupt(struct dwc3 *dwc)
 	usb_gadget_set_state(&dwc->gadget, USB_STATE_DEFAULT);
 
 	dwc3_gadget_usb3_phy_suspend(dwc, false);
-
+#ifndef CONFIG_LGE_PM
 	usb_gadget_vbus_draw(&dwc->gadget, 0);
-
+#endif
 	if (dwc->gadget.speed != USB_SPEED_UNKNOWN)
 		dwc3_disconnect_gadget(dwc);
 
@@ -3129,8 +3150,6 @@ static void dwc3_gadget_conndone_interrupt(struct dwc3 *dwc)
 		dwc->gadget.speed = USB_SPEED_LOW;
 		break;
 	}
-
-	dwc->eps[1]->endpoint.maxpacket = dwc->gadget.ep0->maxpacket;
 
 	/* Enable USB2 LPM Capability */
 

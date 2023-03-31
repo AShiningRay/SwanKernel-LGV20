@@ -44,8 +44,8 @@ bool alice_friends_hm_earjack;
 #ifdef CONFIG_LGE_DP_ANX7688
 unsigned int det_vendor_id;
 unsigned int det_product_id;
-#define APPLE_VID	0x05ac
-#define APPLE_PID	0x100e
+#define APPLE_VID       0x05ac
+#define APPLE_PID       0x100e
 #endif
 /* Protect struct usb_device->state and ->children members
  * Note: Both are also protected by ->dev.sem, except that ->state can
@@ -1036,7 +1036,7 @@ int usb_remove_device(struct usb_device *udev)
 	hub_port_logical_disconnect(hub, udev->portnum);
 	usb_autopm_put_interface(intf);
 #ifdef CONFIG_LGE_DP_ANX7688
-	det_vendor_id = det_product_id = 0x0000;
+        det_vendor_id = det_product_id = 0x0000;
 #endif
 	return 0;
 }
@@ -1585,7 +1585,17 @@ static int hub_configure(struct usb_hub *hub,
 			dev_warn(hub_dev,
 					"insufficient power available "
 					"to use all downstream ports\n");
-		hub->mA_per_port = unit_load;	/* 7.2.1 */
+#ifdef CONFIG_LGE_USB_G_ANDROID
+                /*We don't need to allow unit_load each port,
+                 * allow that remaining variable current divide by maxchild.
+                 */
+                if (maxchild == 0 || remaining < unit_load)
+                        hub->mA_per_port = unit_load;
+                else
+                        hub->mA_per_port = remaining / maxchild;
+#else
+                hub->mA_per_port = unit_load;   /* 7.2.1 */
+#endif
 
 	} else {	/* Self-powered external hub */
 		/* FIXME: What about battery-powered external hubs that
@@ -2171,14 +2181,14 @@ void usb_disconnect(struct usb_device **pdev)
 	int port1 = 1;
 
 #ifdef CONFIG_LGE_ALICE_FRIENDS
-	if (udev->product) {
-	       if (!strcmp(udev->product, "HM")) {
-		       if (IS_ALICE_FRIENDS_HM_ON())
-			       alice_friends_hm_reset();
+        if (udev->product) {
+               if (!strcmp(udev->product, "HM")) {
+                       if (IS_ALICE_FRIENDS_HM_ON())
+                               alice_friends_hm_reset();
 
-		       alice_friends_hm_earjack = false;
-	       }
-	}
+                       alice_friends_hm_earjack = false;
+               }
+        }
 #endif
 
 	/* mark the device as inactive, so any further urb submissions for
@@ -2273,11 +2283,11 @@ static inline void announce_device(struct usb_device *udev) { }
 #ifdef CONFIG_LGE_DP_ANX7688
 bool get_device_apple_pid(void)
 {
-	if (det_vendor_id == APPLE_VID &&
-			det_product_id == APPLE_PID)
-		return true;
+        if (det_vendor_id == APPLE_VID &&
+                        det_product_id == APPLE_PID)
+                return true;
 
-	return false;
+        return false;
 }
 EXPORT_SYMBOL_GPL(get_device_apple_pid);
 #endif
@@ -2509,11 +2519,12 @@ int usb_new_device(struct usb_device *udev)
 	/* Tell the world! */
 	announce_device(udev);
 #ifdef CONFIG_LGE_DP_ANX7688
-	if (udev->speed == USB_SPEED_SUPER) {
-		det_vendor_id = le16_to_cpu(udev->descriptor.idVendor);
-		det_product_id = le16_to_cpu(udev->descriptor.idProduct);
-	}
+        if (udev->speed == USB_SPEED_SUPER) {
+                det_vendor_id = le16_to_cpu(udev->descriptor.idVendor);
+                det_product_id = le16_to_cpu(udev->descriptor.idProduct);
+        }
 #endif
+
 	if (udev->serial)
 		add_device_randomness(udev->serial, strlen(udev->serial));
 	if (udev->product)

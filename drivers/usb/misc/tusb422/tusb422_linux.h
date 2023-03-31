@@ -1,18 +1,18 @@
 /*
- * TUSB422 Power Delivery
+ * Constants for the Texas Instruments TUSB422 Power Delivery
  *
- * Author: Brian Quach <brian.quach@ti.com>
+ * Author: Dan Murphy <dmurphy@ti.com>
  *
- * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright: (C) 2016 Texas Instruments, Inc.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation version 2.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
  *
- * This program is distributed "as is" WITHOUT ANY WARRANTY of any
- * kind, whether express or implied; without even the implied warranty
- * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
  */
 
 #ifndef _TUSB422_LINUX_H_
@@ -22,12 +22,7 @@
 #include <linux/delay.h>
 #include "tusb422_common.h"
 
-enum vbus_sel_t
-{
-	VBUS_SEL_SRC_5V       = (1 << 0),
-	VBUS_SEL_SRC_HI_VOLT  = (1 << 1),
-	VBUS_SEL_SNK          = (1 << 2)
-};
+#define TUSB422_I2C_NAME "tusb422"
 
 int tusb422_read(int reg, void *data, int len);
 int tusb422_write(int reg, const void *data, int len);

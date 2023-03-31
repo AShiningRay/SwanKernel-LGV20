@@ -282,11 +282,11 @@ int lge_br_to_bl (struct msm_fb_data_type *mfd, int br_lvl)
 #if defined(CONFIG_LGE_DISPLAY_AOD_WITH_MIPI)
 	if (mfd->panel_info->aod_cur_mode == AOD_PANEL_MODE_U2_BLANK ||
 		mfd->panel_info->aod_cur_mode == AOD_PANEL_MODE_U2_UNBLANK)
-		pr_debug("[AOD] br_lvl(%d) -> bl_lvl(%d)\n", br_lvl, bl_lvl);
+		pr_info("[AOD] br_lvl(%d) -> bl_lvl(%d)\n", br_lvl, bl_lvl);
 	else
-		pr_debug("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype), br_lvl, bl_lvl);
+		pr_info("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype), br_lvl, bl_lvl);
 #else
-	pr_debug("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype), br_lvl, bl_lvl);
+	pr_info("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype), br_lvl, bl_lvl);
 #endif
 	return bl_lvl;
 }
@@ -544,7 +544,7 @@ void mdss_fb_set_backlight_ex(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 		if ((mfd->panel_info->aod_cur_mode != AOD_PANEL_MODE_U2_BLANK)
 			&& (mfd->panel_info->aod_cur_mode != AOD_PANEL_MODE_U2_UNBLANK)) {
 			mfd->unset_bl_level_ex = bkl_lvl;
-			pr_info("[AOD] Skip ext-BL ctrl except U2 blank & U2 unblank mode\n");
+			pr_info("[AOD] Skip ext-BL ctrl except U2 & U2unblank mode\n");
 			return;
 		}
 		else
@@ -820,7 +820,7 @@ int lge_br_to_bl_ex (struct msm_fb_data_type *mfd, int br_lvl)
 	if (pinfo->blmap[blmaptype])
 		bl_lvl = pinfo->blmap[blmaptype][br_lvl];
 
-	pr_debug("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype),
+	pr_info("%s: br_lvl(%d) -> bl_lvl(%d)\n", lge_get_blmapname(blmaptype),
 						br_lvl, bl_lvl);
 	return bl_lvl;
 	return bl_lvl;

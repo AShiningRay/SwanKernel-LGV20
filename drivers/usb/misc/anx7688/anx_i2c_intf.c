@@ -24,9 +24,6 @@ inline s32 OhioReadReg(unsigned short addr, u8 reg)
 	s32 rc;
 	int retry = 0;
 
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 	do {
 		rc = i2c_smbus_read_byte_data(ohio_client, reg);
@@ -43,9 +40,6 @@ inline s32 OhioReadWordReg(unsigned short addr, u8 reg)
 {
 	s32 rc;
 	int retry = 0;
-
-	if (!ohio_client)
-		return -ENODEV;
 
 	ohio_client->addr = addr;
 	do {
@@ -65,9 +59,6 @@ inline s32 OhioReadBlockReg(unsigned short addr,
 	s32 rc;
 	int retry = 0;
 
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 	do {
 		rc = i2c_smbus_read_i2c_block_data(ohio_client, reg, len, val);
@@ -82,9 +73,6 @@ inline s32 OhioReadBlockReg(unsigned short addr,
 
 inline s32 OhioWriteReg(unsigned short addr, u8 reg, u8 val)
 {
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 	return i2c_smbus_write_byte_data(ohio_client, reg, val);
 }
@@ -92,10 +80,6 @@ inline s32 OhioWriteReg(unsigned short addr, u8 reg, u8 val)
 inline s32 OhioMaskWriteReg(unsigned short addr, u8 reg, u8 mask, u8 val)
 {
 	int rc;
-
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 
 	if (!mask) {
@@ -113,9 +97,6 @@ inline s32 OhioMaskWriteReg(unsigned short addr, u8 reg, u8 mask, u8 val)
 
 inline s32 OhioWriteWordReg(unsigned short addr, u8 reg, u16 val)
 {
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 	return i2c_smbus_write_word_data(ohio_client, reg, val);
 }
@@ -123,10 +104,6 @@ inline s32 OhioWriteWordReg(unsigned short addr, u8 reg, u16 val)
 inline s32 OhioMaskWriteWordReg(unsigned short addr, u8 reg, u16 mask, u16 val)
 {
 	int rc;
-
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 
 	if (!mask) {
@@ -144,9 +121,6 @@ inline s32 OhioMaskWriteWordReg(unsigned short addr, u8 reg, u16 mask, u16 val)
 
 inline s32 OhioWriteBlockReg(unsigned short addr, u8 reg, u8 len, u8 *val)
 {
-	if (!ohio_client)
-		return -ENODEV;
-
 	ohio_client->addr = addr;
 	return i2c_smbus_write_i2c_block_data(ohio_client, reg, len, val);
 }

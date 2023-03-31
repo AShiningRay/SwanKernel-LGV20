@@ -1359,6 +1359,7 @@ void mdss_mdp_handoff_cleanup_pipes(struct msm_fb_data_type *mfd,
 	}
 }
 
+#define DISABLE_IDLE_PC_FIRST_UPDATE /*patch for wait4pingpong(CASE#2180768)*/
 /**
  * mdss_mdp_overlay_start() - Programs the MDP control data path to hardware
  * @mfd: Msm frame buffer structure associated with fb device.
@@ -1374,6 +1375,19 @@ int mdss_mdp_overlay_start(struct msm_fb_data_type *mfd)
 	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
 	struct mdss_mdp_ctl *ctl = mdp5_data->ctl;
 	struct mdss_data_type *mdata = mfd_to_mdata(mfd);
+
+#ifdef DISABLE_IDLE_PC_FIRST_UPDATE
+	static int count = 0;
+
+if( mfd->panel_info->type == MIPI_CMD_PANEL )
+{
+	if(((ctl->play_cnt)== 2) && (count==1))
+	{
+		rc = pm_runtime_put_sync(&mfd->pdev->dev);
+		count++;
+	}
+}
+#endif
 
 	if (mdss_mdp_ctl_is_power_on(ctl)) {
 		if (!mdp5_data->mdata->batfet)
@@ -1407,6 +1421,20 @@ int mdss_mdp_overlay_start(struct msm_fb_data_type *mfd)
 	 * If idle pc feature is not enabled, then get a reference to the
 	 * runtime device which will be released when overlay is turned off
 	 */
+#ifdef DISABLE_IDLE_PC_FIRST_UPDATE
+if( mfd->panel_info->type == MIPI_CMD_PANEL )
+{ 	if(count == 0) {
+		rc = pm_runtime_get_sync(&mfd->pdev->dev);
+		count++;
+	   if (IS_ERR_VALUE(rc)) {
+			pr_err("unable to resume with pm_runtime_get_sync rc=%d\n",
+				rc);
+			goto end;
+	   }
+	 }
+}
+else
+{
 	if (!mdp5_data->mdata->idle_pc_enabled ||
 		(mfd->panel_info->type != MIPI_CMD_PANEL)) {
 		rc = pm_runtime_get_sync(&mfd->pdev->dev);
@@ -1414,9 +1442,21 @@ int mdss_mdp_overlay_start(struct msm_fb_data_type *mfd)
 			pr_err("unable to resume with pm_runtime_get_sync rc=%d\n",
 				rc);
 			goto end;
-		}
-	}
+	         }
+	 }
+}
 
+#else
+	if (!mdp5_data->mdata->idle_pc_enabled ||
+		(mfd->panel_info->type != MIPI_CMD_PANEL)) {
+		rc = pm_runtime_get_sync(&mfd->pdev->dev);
+		if (IS_ERR_VALUE(rc)) {
+			pr_err("unable to resume with pm_runtime_get_sync rc=%d\n",
+				rc);
+			goto end;
+	         }
+	 }
+#endif
 	/*
 	 * We need to do hw init before any hw programming.
 	 * Also, hw init involves programming the VBIF registers which
@@ -1776,7 +1816,7 @@ end:
 
 int mdss_mode_switch(struct msm_fb_data_type *mfd, u32 mode)
 {
-	struct mdss_rect l_roi  = {0}, r_roi = {0};
+	struct mdss_rect l_roi, r_roi;
 	struct mdss_mdp_ctl *ctl = mfd_to_ctl(mfd);
 	struct mdss_overlay_private *mdp5_data = mfd_to_mdp5_data(mfd);
 	struct mdss_mdp_ctl *sctl;
@@ -1955,7 +1995,7 @@ static void __validate_and_set_roi(struct msm_fb_data_type *mfd,
 		goto set_roi;
 
 	if (!memcmp(&commit->l_roi, &tmp_roi, sizeof(tmp_roi)) &&
-	    !memcmp(&commit->r_roi, &tmp_roi, sizeof(tmp_roi)))
+			!memcmp(&commit->r_roi, &tmp_roi, sizeof(tmp_roi)))
 		goto set_roi;
 #endif
 
@@ -3705,6 +3745,9 @@ static void mdss_mdp_overlay_handle_vsync(struct mdss_mdp_ctl *ctl,
 {
 	struct msm_fb_data_type *mfd = NULL;
 	struct mdss_overlay_private *mdp5_data = NULL;
+#ifdef CONFIG_LGE_VSYNC_SKIP
+	struct mdss_data_type *mdata = NULL;
+#endif
 
 	if (!ctl) {
 		pr_err("ctl is NULL\n");
@@ -3723,10 +3766,44 @@ static void mdss_mdp_overlay_handle_vsync(struct mdss_mdp_ctl *ctl,
 		return;
 	}
 
+#ifdef CONFIG_LGE_VSYNC_SKIP
+	mdata = mfd_to_mdata(mfd);
+	if (!mdata) {
+		pr_err("mdata is NULL\n");
+		return;
+	}
+
+	if (mdata->enable_skip_vsync) {
+		mdata->bucket += mdata->weight;
+		if (mdata->skip_first == false) {
+			mdata->skip_first = true;
+
+			pr_debug("vsync on fb%d play_cnt=%d\n", mfd->index, ctl->play_cnt);
+
+			mdp5_data->vsync_time = t;
+			sysfs_notify_dirent(mdp5_data->vsync_event_sd);
+		} else {
+			if (mdata->skip_value <= mdata->bucket) {
+				pr_debug("vsync on fb%d play_cnt=%d\n", mfd->index, ctl->play_cnt);
+				mdp5_data->vsync_time = t;
+				sysfs_notify_dirent(mdp5_data->vsync_event_sd);
+				mdata->bucket -= mdata->skip_value;
+			} else {
+				mdata->skip_count++;
+			}
+		}
+	} else {
+		pr_debug("vsync on fb%d play_cnt=%d\n", mfd->index, ctl->play_cnt);
+
+		mdp5_data->vsync_time = t;
+		sysfs_notify_dirent(mdp5_data->vsync_event_sd);
+	}
+#else /* qct original */
 	pr_debug("vsync on fb%d play_cnt=%d\n", mfd->index, ctl->play_cnt);
 
 	mdp5_data->vsync_time = t;
 	sysfs_notify_dirent(mdp5_data->vsync_event_sd);
+#endif
 }
 
 /* function is called in irq context should have minimum processing */
@@ -5651,6 +5728,7 @@ static int __handle_overlay_prepare(struct msm_fb_data_type *mfd,
 	}
 
 	pr_debug("prepare fb%d num_ovs=%d\n", mfd->index, num_ovs);
+	MDSS_XLOG(mfd->index, num_ovs); //QCT debug patch for SMMU fault issue
 
 	for (i = 0; i < num_ovs; i++) {
 		if (IS_RIGHT_MIXER_OV(ip_ovs[i].flags, ip_ovs[i].dst_rect.x,

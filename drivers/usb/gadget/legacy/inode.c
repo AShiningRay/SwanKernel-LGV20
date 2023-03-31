@@ -1022,7 +1022,7 @@ ep0_read (struct file *fd, char __user *buf, size_t len, loff_t *ptr)
 			if ((retval = setup_req (ep, req, 0)) == 0) {
 				++dev->udc_usage;
 				spin_unlock_irq (&dev->lock);
-				retval = usb_ep_queue (ep, req, GFP_KERNEL);
+				retval = usb_ep_queue (ep, req, GFP_ATOMIC);
 				spin_lock_irq (&dev->lock);
 				--dev->udc_usage;
 			}
@@ -1577,7 +1577,7 @@ delegate:
 				++dev->udc_usage;
 				spin_unlock (&dev->lock);
 				value = usb_ep_queue (gadget->ep0, dev->req,
-							GFP_KERNEL);
+							GFP_ATOMIC);
 				spin_lock (&dev->lock);
 				--dev->udc_usage;
 				if (value < 0) {
@@ -1605,7 +1605,7 @@ delegate:
 
 		++dev->udc_usage;
 		spin_unlock (&dev->lock);
-		value = usb_ep_queue (gadget->ep0, req, GFP_KERNEL);
+		value = usb_ep_queue (gadget->ep0, req, GFP_ATOMIC);
 		spin_lock(&dev->lock);
 		--dev->udc_usage;
 		spin_unlock(&dev->lock);
@@ -2193,4 +2193,3 @@ static void __exit cleanup (void)
 	unregister_filesystem (&gadgetfs_type);
 }
 module_exit (cleanup);
-

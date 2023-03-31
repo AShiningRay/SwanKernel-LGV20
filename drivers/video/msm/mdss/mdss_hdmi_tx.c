@@ -3650,9 +3650,7 @@ static int hdmi_tx_hdcp_off(struct hdmi_tx_ctrl *hdmi_ctrl)
 	DEV_DBG("%s: Turning off HDCP\n", __func__);
 	hdmi_ctrl->hdcp_ops->hdmi_hdcp_off(
 		hdmi_ctrl->hdcp_data);
-#if defined(CONFIG_LGE_DISPLAY_COMMON)
-	cancel_delayed_work(&hdmi_ctrl->hdcp_cb_work);
-#endif
+
 	hdmi_ctrl->hdcp_ops = NULL;
 
 	rc = hdmi_tx_enable_power(hdmi_ctrl, HDMI_TX_DDC_PM,

@@ -68,6 +68,9 @@ extern int mdss_dsi_pinctrl_set_state(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
 #endif
 
 #ifdef CONFIG_LGE_LCD_POWER_CTRL
+extern int panel_not_connected;
+extern int detect_factory_cable(void);
+
 int lge_panel_power_off(struct mdss_panel_data *pdata)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
@@ -82,10 +85,12 @@ int lge_panel_power_off(struct mdss_panel_data *pdata)
 
 	pr_err("[Display] %s+: ndx=%d\n", __func__, ctrl_pdata->ndx);
 
-	if (mdss_dsi_is_right_ctrl(ctrl_pdata)) {
-		pr_err("%s:%d, right ctrl configuration not needed\n",
-			__func__, __LINE__);
-		return ret;
+	if (!(panel_not_connected && detect_factory_cable() && !lge_get_mfts_mode())) {
+		if (mdss_dsi_is_right_ctrl(ctrl_pdata)) {
+			pr_err("%s:%d, right ctrl configuration not needed\n",
+				__func__, __LINE__);
+			return ret;
+		}
 	}
 
 	ret = msm_dss_set_vreg(ctrl_pdata->panel_power_data.vreg_config,
@@ -166,10 +171,12 @@ int lge_panel_power_on(struct mdss_panel_data *pdata)
 
 	pr_err("[Display] %s+: ndx=%d\n", __func__, ctrl_pdata->ndx);
 
-	if (mdss_dsi_is_right_ctrl(ctrl_pdata)) {
-		pr_err("%s:%d, right ctrl configuration not needed\n",
-			__func__, __LINE__);
-		return ret;
+	if (!(panel_not_connected && detect_factory_cable() && !lge_get_mfts_mode())) {
+		if (mdss_dsi_is_right_ctrl(ctrl_pdata)) {
+			pr_err("%s:%d, right ctrl configuration not needed\n",
+				__func__, __LINE__);
+			return ret;
+		}
 	}
 
 	lge_extra_gpio_set_value(ctrl_pdata, "vddio", 1);

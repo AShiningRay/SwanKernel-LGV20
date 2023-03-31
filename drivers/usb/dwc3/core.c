@@ -567,17 +567,6 @@ int dwc3_core_init(struct dwc3 *dwc)
 		dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
 	}
 
-	/*
-	 * Enable evicting endpoint cache after flow control for bulk
-	 * endpoints for dwc3 core version 3.00a and 3.20a
-	 */
-	if (dwc->revision == DWC3_REVISION_300A ||
-			dwc->revision == DWC3_REVISION_320A) {
-		reg = dwc3_readl(dwc->regs, DWC3_GUCTL2);
-		reg |= DWC3_GUCTL2_ENABLE_EP_CACHE_EVICT;
-		dwc3_writel(dwc->regs, DWC3_GUCTL2, reg);
-	}
-
 	return 0;
 
 err2:
@@ -889,8 +878,12 @@ static int dwc3_probe(struct platform_device *pdev)
 		dwc->dr_mode = of_usb_get_dr_mode(node);
 		dwc->nominal_elastic_buffer = of_property_read_bool(node,
 				"snps,nominal-elastic-buffer");
+#ifdef CONFIG_LGE_USB_COMPLIANCE_TEST
+		dwc->usb3_u1u2_disable = false;
+#else
 		dwc->usb3_u1u2_disable = of_property_read_bool(node,
 				"snps,usb3-u1u2-disable");
+#endif
 		dwc->enable_bus_suspend = of_property_read_bool(node,
 						"snps,bus-suspend-enable");
 

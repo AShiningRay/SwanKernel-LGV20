@@ -128,6 +128,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 #if defined(CONFIG_LGE_DISPLAY_AOD_SUPPORTED)
 			/* Only panel reset when U0 -> U3 or U0 -> U2 Unblank*/
 #if defined(CONFIG_LGE_DISPLAY_DYN_DSI_MODE_SWITCH)
+pr_err("<<<<<<<<<<< DSP : %d // Mode : %d \n",pinfo->dynamic_switch_pending ,pinfo->aod_cmd_mode);
 			if(!pinfo->dynamic_switch_pending &&
 				pinfo->aod_cmd_mode  != SWITCH_VIDEO_TO_CMD &&
 				pinfo->aod_cmd_mode  != SWITCH_CMD_TO_VIDEO &&
@@ -190,7 +191,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 		}
 
 		if (gpio_is_valid(ctrl_pdata->mode_gpio)) {
-			bool out = false;
+			bool out;
 
 			if (pinfo->mode_gpio_state == MODE_GPIO_HIGH)
 				out = true;
@@ -351,6 +352,7 @@ int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 				oem_mdss_mq_cmd_unset(ctrl);
 #endif
 			/*fps to 60 */
+			pr_info("[Display] FPS changed to 60\n");
 			mdss_dsi_panel_cmds_send(ctrl, &ctrl->aod_cmds[AOD_PANEL_CMD_FPS_60], CMD_REQ_COMMIT);
 			goto notify;
 		default:
@@ -386,6 +388,12 @@ int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->sharpness_on_cmds, CMD_REQ_COMMIT);
 #endif
 
+#if defined(CONFIG_LGE_DISPLAY_MFTS_DET_SUPPORTED) && !defined(CONFIG_LGE_DISPLAY_DYN_DSI_MODE_SWITCH)
+	if (lge_get_factory_boot()) {
+		lge_set_validate_lcd_reg();
+	}
+#endif
+
 	if (ctrl->display_on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->display_on_cmds, CMD_REQ_COMMIT);
 
@@ -400,8 +408,8 @@ notify:
 		int param;
 		param = pinfo->aod_cur_mode;
 #if defined(CONFIG_LGE_DISPLAY_DYN_DSI_MODE_SWITCH)
-		// In case of u3 unblank, notify to touch driver after video streaming enable.
-		if (pinfo->aod_cur_mode != AOD_PANEL_MODE_U3_UNBLANK) {
+		//in case of u3 unblank, notify to touch driver after video streaming enable.
+		if (pinfo->aod_cur_mode != AOD_PANEL_MODE_U3_UNBLANK){
 #endif
 			if(touch_notifier_call_chain(LCD_EVENT_LCD_MODE,
 								(void *)&param))
@@ -444,6 +452,7 @@ int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	switch (pinfo->aod_cmd_mode) {
 		case AOD_CMD_ENABLE:
 			/* fps to 30 */
+			pr_info("[Display] FPS changed to 30\n");
 			mdss_dsi_panel_cmds_send(ctrl, &ctrl->aod_cmds[AOD_PANEL_CMD_FPS_30], CMD_REQ_COMMIT);
 #if defined(CONFIG_LGE_DISPLAY_MARQUEE_SUPPORTED)
 			if (pinfo->mq_mode)
@@ -466,6 +475,7 @@ int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 			break;
 		case CMD_SKIP:
 			/* fps to 30 */
+			pr_info("[Display] FPS changed to 30\n");
 			mdss_dsi_panel_cmds_send(ctrl, &ctrl->aod_cmds[AOD_PANEL_CMD_FPS_30], CMD_REQ_COMMIT);
 			goto notify;
 		default:

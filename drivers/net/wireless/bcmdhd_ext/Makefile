@@ -92,10 +92,6 @@ DHDCFLAGS += -DWL_CFG80211
 DHDCFLAGS += -DCOUNTRY_SINGLE_REGREV
 # Use Random Mac Addr in Wi-Fi Scan Always Mode
 DHDCFLAGS += -DSUPPORT_RANDOM_MAC_SCAN
-# enable DYNAMIC_MUMIMO_CONTROL
-ifeq ($(CONFIG_BCMDHD_DYNAMIC_MUMIMO_CONTROL),y)
-DHDCFLAGS += -DDYNAMIC_MUMIMO_CONTROL
-endif
 
 # Debug
 DHDCFLAGS += -DSIMPLE_MAC_PRINT
@@ -174,7 +170,7 @@ DHDCFLAGS += -DSKIP_WLFC_ON_CONCURRENT
 DHDCFLAGS += -DDEBUG_DPC_THREAD_WATCHDOG
 DHDCFLAGS += -DENABLE_ARP_SNOOP_MODE
 DHDCFLAGS += -DDHD_PM_CONTROL_FROM_FILE
-#DHDCFLAGS += -DCUSTOM_EVENT_PM_WAKE=20
+DHDCFLAGS += -DCUSTOM_EVENT_PM_WAKE=20
 
 # For special PNO Event keep wake lock for 10sec
 DHDCFLAGS += -DCUSTOM_PNO_EVENT_LOCK_xTIME=10
@@ -381,8 +377,6 @@ endif #CONFIG_RUNTIME_TCPACK_SUPPRESS
   DHDCFLAGS += -DAPSTA_RESTRICTED_CHANNEL
 # To support APF
 #  DHDCFLAGS += -DAPF #removed by cheolsook.lee 20160621, p2p disconnect issue
-# To support AP rxchain power save
-  DHDCFLAGS += -DSUPPORT_AP_POWERSAVE
 
 ifeq ($(CONFIG_ARCH_MSM8996),y)
  # Runtime PM
@@ -401,7 +395,6 @@ endif
 
 ifeq ($(CONFIG_BCM4359),y)
   DHDCFLAGS += -DUSE_LATE_INITCALL_SYNC
-  DHDCFLAGS += -DPRIVATE_SCANSUPPRESS
 # DRIVER_TYPE = y
 endif
 endif
@@ -424,7 +417,6 @@ DHDOFILES := dhd_pno.o dhd_common.o dhd_ip.o dhd_custom_gpio.o dhd_custom_lge.o	
 	sbutils.o siutils.o wl_android.o wl_cfg80211.o wl_cfgp2p.o wl_cfg_btcoex.o wldev_common.o \
 	wl_linux_mon.o wl_roam.o dhd_wlfc.o
 
-CFLAGS_dhd_linux.o += -Wno-sizeof-pointer-memaccess
 ifeq ($(CONFIG_BCMDHD_PCIE),y)
 DHDOFILES += dhd_pcie.o dhd_pcie_linux.o dhd_flowring.o	dhd_msgbuf.o pcie_core.o
 endif

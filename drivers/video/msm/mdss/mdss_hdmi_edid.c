@@ -719,9 +719,7 @@ static ssize_t hdmi_edid_sysfs_rda_3d_modes(struct device *dev,
 		}
 	}
 
-#ifndef CONFIG_LGE_DISPLAY_COMMON
-	DEV_DBG("%s: '%s'\n", __func__, buf);
-#endif
+	//DEV_DBG("%s: '%s'\n", __func__, buf);
 	ret += scnprintf(buf + ret, PAGE_SIZE - ret, "\n");
 
 	return ret;

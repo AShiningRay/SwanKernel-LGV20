@@ -138,7 +138,6 @@ struct msm_ipc_router_xprt_info {
 	struct msm_ipc_router_xprt *xprt;
 	uint32_t remote_node_id;
 	uint32_t initialized;
-	uint32_t hello_sent;
 	struct list_head pkt_list;
 	struct wakeup_source ws;
 	struct mutex rx_lock_lhb2;
@@ -216,25 +215,6 @@ enum {
 	DOWN,
 	UP,
 };
-
-/**
- * is_sensor_port() - Check if the remote port is sensor service or not
- * @rport: Pointer to the remote port.
- *
- * Return: true if the remote port is sensor service else false.
- */
-static int is_sensor_port(struct msm_ipc_router_remote_port *rport)
-{
-	u32 svcid = 0;
-
-	if (rport && rport->server) {
-		svcid = rport->server->name.service;
-		if (svcid == 400 || (svcid >= 256 && svcid <= 320))
-			return true;
-	}
-
-	return false;
-}
 
 static void init_routing_table(void)
 {
@@ -1185,8 +1165,7 @@ static int post_pkt_to_port(struct msm_ipc_port *port_ptr,
 	}
 
 	mutex_lock(&port_ptr->port_rx_q_lock_lhc3);
-	if (pkt->ws_need)
-		__pm_stay_awake(port_ptr->port_rx_ws);
+	__pm_stay_awake(port_ptr->port_rx_ws);
 	list_add_tail(&temp_pkt->list, &port_ptr->port_rx_q);
 	wake_up(&port_ptr->port_rx_wait_q);
 	notify = port_ptr->notify;
@@ -1522,6 +1501,27 @@ static void msm_ipc_router_free_resume_tx_port(
 }
 
 /**
+ * msm_ipc_router_free_conn_info() - Free the local ports
+ * @rport_ptr: Pointer to the remote port.
+ *
+ * This function deletes all the local ports associated with a remote port
+ * and frees the memory allocated to each local port.
+ *
+ * Must be called with rport_ptr->rport_lock_lhb2 locked.
+ */
+static void msm_ipc_router_free_conn_info(
+	struct msm_ipc_router_remote_port *rport_ptr)
+{
+	struct ipc_router_conn_info *conn_info, *tmp_conn_info;
+
+	list_for_each_entry_safe(conn_info, tmp_conn_info,
+			&rport_ptr->conn_info_list, list) {
+		list_del(&conn_info->list);
+		kfree(conn_info);
+	}
+}
+
+/**
  * msm_ipc_router_lookup_resume_tx_port() - Lookup resume_tx port list
  * @rport_ptr: Remote port whose resume_tx port list needs to be looked.
  * @port_id: Port ID which needs to be looked from the list.
@@ -1647,6 +1647,7 @@ static void ipc_router_release_rport(struct kref *ref)
 
 	mutex_lock(&rport_ptr->rport_lock_lhb2);
 	msm_ipc_router_free_resume_tx_port(rport_ptr);
+	msm_ipc_router_free_conn_info(rport_ptr);
 	mutex_unlock(&rport_ptr->rport_lock_lhb2);
 	kfree(rport_ptr);
 }
@@ -2486,37 +2487,12 @@ static void do_version_negotiation(struct msm_ipc_router_xprt_info *xprt_info,
 	}
 }
 
-static int send_hello_msg(struct msm_ipc_router_xprt_info *xprt_info)
-{
-	int rc = 0;
-	union rr_control_msg ctl;
-
-	if (xprt_info->hello_sent)
-		return 0;
-
-	xprt_info->hello_sent = 1;
-	/* Send a HELLO message */
-	memset(&ctl, 0, sizeof(ctl));
-	ctl.hello.cmd = IPC_ROUTER_CTRL_CMD_HELLO;
-	ctl.hello.checksum = IPC_ROUTER_HELLO_MAGIC;
-	ctl.hello.versions = (uint32_t)IPC_ROUTER_VER_BITMASK;
-	ctl.hello.checksum = ipc_router_calc_checksum(&ctl);
-	rc = ipc_router_send_ctl_msg(xprt_info, &ctl,
-				     IPC_ROUTER_DUMMY_DEST_NODE);
-	if (rc < 0) {
-		xprt_info->hello_sent = 0;
-		IPC_RTR_ERR("%s: Error sending HELLO message\n",
-			    __func__);
-		return rc;
-	}
-	return rc;
-}
-
 static int process_hello_msg(struct msm_ipc_router_xprt_info *xprt_info,
 				union rr_control_msg *msg,
 				struct rr_header_v1 *hdr)
 {
 	int i, rc = 0;
+	union rr_control_msg ctl;
 	struct msm_ipc_routing_table_entry *rt_entry;
 
 	if (!hdr)
@@ -2531,10 +2507,19 @@ static int process_hello_msg(struct msm_ipc_router_xprt_info *xprt_info,
 	kref_put(&rt_entry->ref, ipc_router_release_rtentry);
 
 	do_version_negotiation(xprt_info, msg);
-	rc = send_hello_msg(xprt_info);
-	if (rc < 0)
+	/* Send a reply HELLO message */
+	memset(&ctl, 0, sizeof(ctl));
+	ctl.hello.cmd = IPC_ROUTER_CTRL_CMD_HELLO;
+	ctl.hello.checksum = IPC_ROUTER_HELLO_MAGIC;
+	ctl.hello.versions = (uint32_t)IPC_ROUTER_VER_BITMASK;
+	ctl.hello.checksum = ipc_router_calc_checksum(&ctl);
+	rc = ipc_router_send_ctl_msg(xprt_info, &ctl,
+				     IPC_ROUTER_DUMMY_DEST_NODE);
+	if (rc < 0) {
+		IPC_RTR_ERR("%s: Error sending reply HELLO message\n",
+								__func__);
 		return rc;
-
+	}
 	xprt_info->initialized = 1;
 
 	/* Send list of servers from the local node and from nodes
@@ -2755,6 +2740,7 @@ static void do_read_data(struct work_struct *work)
 	struct rr_packet *pkt = NULL;
 	struct msm_ipc_port *port_ptr;
 	struct msm_ipc_router_remote_port *rport_ptr;
+	int ret;
 
 	struct msm_ipc_router_xprt_info *xprt_info =
 		container_of(work,
@@ -2762,7 +2748,16 @@ static void do_read_data(struct work_struct *work)
 			     read_data);
 
 	while ((pkt = rr_read(xprt_info)) != NULL) {
+		if (pkt->length < calc_rx_header_size(xprt_info) ||
+		    pkt->length > MAX_IPC_PKT_SIZE) {
+			IPC_RTR_ERR("%s: Invalid pkt length %d\n",
+				__func__, pkt->length);
+			goto read_next_pkt1;
+		}
 
+		ret = extract_header(pkt);
+		if (ret < 0)
+			goto read_next_pkt1;
 		hdr = &(pkt->hdr);
 
 		if ((hdr->dst_node_id != IPC_ROUTER_NID_LOCAL) &&
@@ -4091,7 +4086,6 @@ static int msm_ipc_router_add_xprt(struct msm_ipc_router_xprt *xprt)
 
 	xprt_info->xprt = xprt;
 	xprt_info->initialized = 0;
-	xprt_info->hello_sent = 0;
 	xprt_info->remote_node_id = -1;
 	INIT_LIST_HEAD(&xprt_info->pkt_list);
 	mutex_init(&xprt_info->rx_lock_lhb2);
@@ -4131,7 +4125,6 @@ static int msm_ipc_router_add_xprt(struct msm_ipc_router_xprt *xprt)
 	up_write(&routing_table_lock_lha3);
 
 	xprt->priv = xprt_info;
-	send_hello_msg(xprt_info);
 
 	return 0;
 }
@@ -4206,7 +4199,6 @@ void msm_ipc_router_xprt_notify(struct msm_ipc_router_xprt *xprt,
 {
 	struct msm_ipc_router_xprt_info *xprt_info = xprt->priv;
 	struct msm_ipc_router_xprt_work *xprt_work;
-	struct msm_ipc_router_remote_port *rport_ptr = NULL;
 	struct rr_packet *pkt;
 	int ret;
 
@@ -4259,34 +4251,9 @@ void msm_ipc_router_xprt_notify(struct msm_ipc_router_xprt *xprt,
 	if (!pkt)
 		return;
 
-	if (pkt->length < calc_rx_header_size(xprt_info) ||
-	    pkt->length > MAX_IPC_PKT_SIZE) {
-		IPC_RTR_ERR("%s: Invalid pkt length %d\n",
-			    __func__, pkt->length);
-		release_pkt(pkt);
-		return;
-	}
-
-	ret = extract_header(pkt);
-	if (ret < 0) {
-		release_pkt(pkt);
-		return;
-	}
-
-	pkt->ws_need = true;
-
-	if (pkt->hdr.type == IPC_ROUTER_CTRL_CMD_DATA)
-		rport_ptr = ipc_router_get_rport_ref(pkt->hdr.src_node_id,
-						     pkt->hdr.src_port_id);
-
 	mutex_lock(&xprt_info->rx_lock_lhb2);
 	list_add_tail(&pkt->list, &xprt_info->pkt_list);
-	/* check every pkt is from SENSOR services or not*/
-	if (is_sensor_port(rport_ptr))
-		pkt->ws_need = false;
-	else
-		__pm_stay_awake(&xprt_info->ws);
-
+	__pm_stay_awake(&xprt_info->ws);
 	mutex_unlock(&xprt_info->rx_lock_lhb2);
 	queue_work(xprt_info->workqueue, &xprt_info->read_data);
 }

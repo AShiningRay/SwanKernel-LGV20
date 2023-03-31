@@ -28,6 +28,10 @@
 #include "mdss_mdp_trace.h"
 #include "mdss_debug.h"
 
+#if defined(CONFIG_LGE_DISPLAY_AOD_SUPPORTED)
+#include "lge/lge_mdss_aod.h"
+#endif
+
 #define MDSS_MDP_QSEED3_VER_DOWNSCALE_LIM 2
 #define NUM_MIXERCFG_REGS 3
 #define MDSS_MDP_WB_OUTPUT_BPP	3
@@ -76,15 +80,13 @@ static inline u64 fudge_factor(u64 val, u32 numer, u32 denom)
 	u64 result = val;
 
 	if (val) {
-		u64 temp = U64_MAX;
+		u64 temp = -1UL;
 
 		do_div(temp, val);
 		if (temp > numer) {
 			/* no overflow, so we can do the operation*/
 			result = (val * (u64)numer);
 			do_div(result, denom);
-		} else {
-			pr_warn("Overflow, skip fudge factor\n");
 		}
 	}
 	return result;
@@ -935,7 +937,11 @@ static u32 mdss_mdp_calc_prefill_line_time(struct mdss_mdp_ctl *ctl,
 {
 	u32 prefill_us = 0;
 	u32 prefill_amortized = 0;
+#if IS_ENABLED(CONFIG_LGE_DISPLAY_COMMON)
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
+#else
+	struct mdss_data_type *mdata;
+#endif
 	struct mdss_mdp_mixer *mixer;
 	struct mdss_panel_info *pinfo;
 	u32 fps, v_total;
@@ -5408,7 +5414,13 @@ static void mdss_mdp_force_border_color(struct mdss_mdp_ctl *ctl)
 	if (ctl->mixer_right)
 		ctl->mixer_right->params_changed++;
 }
-
+#if (defined CONFIG_LGE_PM_TRITON)
+#include <linux/lib_triton.h>
+#ifdef FPS_BOOST
+u64 last_commit_ms;
+EXPORT_SYMBOL(last_commit_ms);
+#endif
+#endif
 int mdss_mdp_display_commit(struct mdss_mdp_ctl *ctl, void *arg,
 	struct mdss_mdp_commit_cb *commit_cb)
 {
@@ -5700,6 +5712,9 @@ int mdss_mdp_display_commit(struct mdss_mdp_ctl *ctl, void *arg,
 		pr_warn("ctl %d error displaying frame\n", ctl->num);
 
 	ctl->play_cnt++;
+#if (defined CONFIG_LGE_PM_TRITON && defined FPS_BOOST)
+	last_commit_ms = ktime_to_ms(ktime_get());
+#endif
 	ATRACE_END("flush_kickoff");
 
 done:

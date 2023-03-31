@@ -167,7 +167,7 @@ static void lm3697_set_main_current_level(struct i2c_client *client, int level)
 
 	mutex_unlock(&dev->bl_mutex);
 
-	pr_debug("[LCD][LM3697] %s : backlight level=%d, cal_value=%d \n", __func__, level, cal_value);
+	pr_info("[LCD][LM3697] %s : backlight level=%d, cal_value=%d \n", __func__, level, cal_value);
 }
 
 static void lm3697_set_main_current_level_no_mapping(
@@ -194,7 +194,7 @@ static void lm3697_set_main_current_level_no_mapping(
 		lm3697_write_reg(client, 0x24, 0x00);
 	}
 	mutex_unlock(&main_lm3697_dev->bl_mutex);
-	pr_debug("[LCD][LM3697] %s : backlight level=%d\n", __func__, level);
+	pr_info("[LCD][LM3697] %s : backlight level=%d\n", __func__, level);
 }
 
 void lm3697_backlight_on(int level)
@@ -346,7 +346,7 @@ static ssize_t lcd_backlight_store_level(struct device *dev,
 	level = simple_strtoul(buf, NULL, 10);
 
 	lm3697_set_main_current_level_no_mapping(client, level);
-	pr_debug("[LCD][DEBUG] write %d direct to "
+	pr_info("[LCD][DEBUG] write %d direct to "
 			"backlight register\n", level);
 
 	return count;
@@ -360,7 +360,7 @@ static int lm3697_bl_resume(struct i2c_client *client)
 
 static int lm3697_bl_suspend(struct i2c_client *client, pm_message_t state)
 {
-	pr_debug("[LCD][DEBUG] %s: new state: %d\n",
+	pr_info("[LCD][DEBUG] %s: new state: %d\n",
 			__func__, state.event);
 
 	lm3697_lcd_backlight_set_level(saved_main_lcd_level);
@@ -393,7 +393,7 @@ static ssize_t lcd_backlight_store_on_off(struct device *dev,
 
 	on_off = simple_strtoul(buf, NULL, 10);
 
-	pr_debug("[LCD][DEBUG] %d", on_off);
+	pr_info("[LCD][DEBUG] %d", on_off);
 
 	if (on_off == 1)
 		lm3697_bl_resume(client);
@@ -533,7 +533,7 @@ static int lm3697_parse_dt(struct device *dev,
 	if(rc == -EINVAL)
 		lm3697_pwm_enable = 1;
 
-	pr_debug("[LM3697] %s gpio: %d, max_current: %d, min: %d, "
+	pr_info("[LM3697] %s gpio: %d, max_current: %d, min: %d, "
 			"default: %d, max: %d, output_config: %d, brightness_config: %d, "
 			"sink_feedback: %d, boost_ctrl: %d, pwm : %d \n",
 			__func__, pdata->gpio,
@@ -566,7 +566,7 @@ static int lm3697_probe(struct i2c_client *i2c_dev,
 	struct backlight_properties props;
 	int err;
 
-	pr_debug("[LCD][LM3697] %s: i2c probe start\n", __func__);
+	pr_info("[LCD][LM3697] %s: i2c probe start\n", __func__);
 
 	if (&i2c_dev->dev.of_node) {
 		pdata = devm_kzalloc(&i2c_dev->dev,
@@ -582,7 +582,7 @@ static int lm3697_probe(struct i2c_client *i2c_dev,
 	} else {
 		pdata = i2c_dev->dev.platform_data;
 	}
-	pr_debug("[LCD][LM3697] %s: gpio = %d\n", __func__,pdata->gpio);
+	pr_info("[LCD][LM3697] %s: gpio = %d\n", __func__,pdata->gpio);
 	if (pdata->gpio && gpio_request(pdata->gpio, "lm3697 reset") != 0) {
 		return -ENODEV;
 	}
@@ -657,7 +657,7 @@ static int lm3697_remove(struct i2c_client *i2c_dev)
 	struct lm3697_device *dev;
 	int gpio = main_lm3697_dev->gpio;
 
-	pr_debug("[LCD][LM3697] %s: ++\n", __func__);
+	pr_info("[LCD][LM3697] %s: ++\n", __func__);
 	device_remove_file(&i2c_dev->dev, &dev_attr_lm3697_level);
 	device_remove_file(&i2c_dev->dev, &dev_attr_lm3697_backlight_on_off);
 	dev = (struct lm3697_device *)i2c_get_clientdata(i2c_dev);
@@ -666,11 +666,11 @@ static int lm3697_remove(struct i2c_client *i2c_dev)
 
 	if (gpio_is_valid(gpio))
 	{
-		pr_debug("[LCD][LM3697] %s: gpio %d free \n", __func__, gpio);
+		pr_info("[LCD][LM3697] %s: gpio %d free \n", __func__, gpio);
 		gpio_free(gpio);
 	}
 
-	pr_debug("[LCD][LM3697] %s: -- \n", __func__);
+	pr_info("[LCD][LM3697] %s: -- \n", __func__);
 	return 0;
 }
 
