@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -841,11 +841,7 @@ static const struct tasha_reg_mask_val tasha_spkr_default[] = {
 	{WCD9335_CDC_COMPANDER8_CTL3, 0x80, 0x80},
 	{WCD9335_CDC_COMPANDER7_CTL7, 0x01, 0x01},
 	{WCD9335_CDC_COMPANDER8_CTL7, 0x01, 0x01},
-#ifdef CONFIG_MACH_MSM8996_H1
-	{WCD9335_CDC_BOOST0_BOOST_CTL, 0x7C, 0x58},
-#else
 	{WCD9335_CDC_BOOST0_BOOST_CTL, 0x7C, 0x50},
-#endif
 	{WCD9335_CDC_BOOST1_BOOST_CTL, 0x7C, 0x50},
 };
 
@@ -858,16 +854,7 @@ static const struct tasha_reg_mask_val tasha_spkr_mode1[] = {
 	{WCD9335_CDC_BOOST1_BOOST_CTL, 0x7C, 0x44},
 };
 
-static const struct tasha_reg_mask_val tasha_high_impedance[] = {
-	{WCD9335_TLMM_I2S_TX_SD0_PINCFG, 0x1F, 0x0C},
-	{WCD9335_TLMM_I2S_TX_SD1_PINCFG, 0x1F, 0x0C},
-	{WCD9335_TLMM_I2S_TX_SCK_PINCFG, 0x1F, 0x0C},
-	{WCD9335_TLMM_I2S_TX_WS_PINCFG, 0x1F, 0x0C},
-	{WCD9335_TEST_DEBUG_PIN_CTL_OE_1, 0xE0, 0xE0},
-	{WCD9335_TEST_DEBUG_PIN_CTL_OE_2, 0x01, 0x01},
-};
-
-#if defined(CONFIG_SND_SOC_ES9218P)
+#if defined(CONFIG_SND_SOC_ES9018)|| defined(CONFIG_SND_SOC_ES9218P)
 extern bool enable_es9218p;
 #endif
 
@@ -972,20 +959,6 @@ static void tasha_cdc_sido_ccl_enable(struct tasha_priv *tasha, bool ccl_flag)
 			snd_soc_update_bits(codec,
 				WCD9335_SIDO_SIDO_CCL_10, 0xFF, 0x02);
 	}
-}
-
-static void tasha_set_high_impedance_mode(struct snd_soc_codec *codec)
-{
-	const struct tasha_reg_mask_val *regs;
-	int i, size;
-
-	dev_dbg(codec->dev, "%s: setting TX I2S in Hi-Z mode\n", __func__);
-	regs = tasha_high_impedance;
-	size = ARRAY_SIZE(tasha_high_impedance);
-
-	for (i = 0; i < size; i++)
-		snd_soc_update_bits(codec, regs[i].reg,
-				    regs[i].mask, regs[i].val);
 }
 
 static bool tasha_cdc_is_svs_enabled(struct tasha_priv *tasha)
@@ -1327,6 +1300,7 @@ static bool tasha_mbhc_micb_en_status(struct wcd_mbhc *mbhc, int micb_num)
 	u8 val;
 	if (micb_num == MIC_BIAS_2) {
 		val = (snd_soc_read(mbhc->codec, WCD9335_ANA_MICB2) >> 6);
+		pr_info("[LGE MBHC]@@@ check micb en status =%d\n", val);
 		if (val == 0x01)
 			return true;
 	}
@@ -1356,9 +1330,7 @@ static void tasha_mbhc_hph_l_pull_up_control(struct snd_soc_codec *codec,
 
 	if (TASHA_IS_2_0(tasha->wcd9xxx->version))
 	{
-#if defined(CONFIG_SND_SOC_ES9018)
-		snd_soc_update_bits(codec, WCD9335_MBHC_PLUG_DETECT_CTL, 0xC0, 0xC0);
-#elif defined(CONFIG_SND_SOC_ES9218P)
+#if defined(CONFIG_SND_SOC_ES9018)||defined(CONFIG_SND_SOC_ES9218P)
 		if(enable_es9218p)
 			snd_soc_update_bits(codec, WCD9335_MBHC_PLUG_DETECT_CTL, 0xC0, 0xC0);
 		else
@@ -1708,11 +1680,6 @@ static inline void tasha_mbhc_get_result_params(struct wcd9xxx *wcd9xxx,
 
 	wcd9xxx_reg_update_bits(&wcd9xxx->core_res,
 				WCD9335_ANA_MBHC_ZDET, 0x20, 0x20);
-
-#if defined(CONFIG_SND_SOC_ES9218P)
-	usleep_range(5000, 5050);
-#endif
-
 	for (i = 0; i < TASHA_ZDET_NUM_MEASUREMENTS; i++) {
 		val = wcd9xxx_reg_read(&wcd9xxx->core_res,
 					WCD9335_ANA_MBHC_RESULT_2);
@@ -1859,13 +1826,13 @@ static void tasha_wcd_mbhc_calc_impedance(struct wcd_mbhc *mbhc, uint32_t *zl,
 	bool is_fsm_disable = false;
 	bool is_change = false;
 
-#if defined(CONFIG_SND_SOC_ES9018)
-        struct tasha_mbhc_zdet_param zdet_param[] = {
-                {4, 0, 4, 0x08, 0x14, 0x18}, /* < 32ohm */
-                {2, 0, 3, 0x18, 0x7C, 0x90}, /* 32ohm < Z < 400ohm */
-                {2, 0, 3, 0x18, 0x7C, 0x90}, /* 400ohm < Z < 1200ohm */
-                {2, 0, 3, 0x18, 0x7C, 0x90}, /* >1200ohm */
-        };
+#ifdef CONFIG_SND_SOC_ES9018
+	struct tasha_mbhc_zdet_param zdet_param[] = {
+		{4, 0, 4, 0x08, 0x14, 0x18}, /* < 32ohm */
+		{2, 0, 3, 0x18, 0x7C, 0x90}, /* 32ohm < Z < 400ohm */
+		{2, 0, 3, 0x18, 0x7C, 0x90}, /* 400ohm < Z < 1200ohm */
+		{2, 0, 3, 0x18, 0x7C, 0x90}, /* >1200ohm */
+	};
 #else
 	struct tasha_mbhc_zdet_param zdet_param[] = {
 		{4, 0, 4, 0x08, 0x14, 0x18}, /* < 32ohm */
@@ -1905,15 +1872,6 @@ static void tasha_wcd_mbhc_calc_impedance(struct wcd_mbhc *mbhc, uint32_t *zl,
 		return;
 	}
 	WCD_MBHC_RSC_ASSERT_LOCKED(mbhc);
-
-#if defined(CONFIG_SND_SOC_ES9218P)
-	if(snd_soc_read(codec, WCD9335_ANA_HPH) & 0xC0)
-	{
-	  pr_err("[LGE MBHC]  WCD9335_ANA_HPH reset!\n");
-	  snd_soc_write(codec, WCD9335_ANA_HPH, 0x00);
-	  usleep_range(5000, 5050);
-	}
-#endif
 
 	if (tasha->zdet_gpio_cb)
 		is_change = tasha->zdet_gpio_cb(codec, true);
@@ -1957,12 +1915,21 @@ static void tasha_wcd_mbhc_calc_impedance(struct wcd_mbhc *mbhc, uint32_t *zl,
 	if (z1L < TASHA_ZDET_VAL_32) {
 		zdet_param_ptr = &zdet_param[0];
 		d1 = d1_a[0];
+		dev_dbg(codec->dev, "%s: [LGE MBHC] change zDetParam 0 ~ 32, HPH_L = %d(ohms)\n",
+				__func__, z1L);
 	} else if ((z1L > TASHA_ZDET_VAL_400) && (z1L <= TASHA_ZDET_VAL_1200)) {
 		zdet_param_ptr = &zdet_param[2];
 		d1 = d1_a[2];
+	        dev_dbg(codec->dev, "%s: [LGE MBHC] change zDetParam 401 ~ 1200, HPH_L = %d(ohms)\n",
+				__func__, z1L);
 	} else if (z1L > TASHA_ZDET_VAL_1200) {
 		zdet_param_ptr = &zdet_param[3];
 		d1 = d1_a[3];
+	        dev_dbg(codec->dev, "%s: [LGE MBHC] change zDetParam 1201 ~ , HPH_L = %d(ohms)\n",
+				__func__, z1L);
+	} else {
+		dev_dbg(codec->dev, "%s: [LGE MBHC] No change zDetParam 33 ~ 400, HPH_L = %d(ohms)\n",
+				__func__, z1L);
 	}
 	tasha_mbhc_zdet_ramp(codec, zdet_param_ptr, &z1L, NULL, d1);
 
@@ -8134,11 +8101,11 @@ static int tasha_rx_hph_mode_put(struct snd_kcontrol *kcontrol,
 		__func__, mode_val);
 
 	if (mode_val == 0) {
-#ifndef CONFIG_MACH_LGE
+#if 0 //qct org
 		dev_warn(codec->dev, "%s:Invalid HPH Mode, default to Cls-H HiFi\n",
 			__func__);
 		mode_val = CLS_H_HIFI;
-#else // LG default mode is set to CLS_H_LP
+#else //LG modification, LG default mode is set to CLS_H_LP
 		dev_warn(codec->dev, "%s:Invalid HPH Mode, default to Cls-H LowPower\n",
 			__func__);
 		mode_val = CLS_H_LP;
@@ -11232,6 +11199,7 @@ static const struct snd_soc_dapm_widget tasha_dapm_widgets[] = {
 	SND_SOC_DAPM_AIF_OUT_E("AIF4 CAP", "AIF4 Capture", 0, SND_SOC_NOPM,
 		AIF4_CAP, 0, tasha_codec_enable_slimtx,
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
+
 	SND_SOC_DAPM_AIF_OUT_E("AIF4 VI", "VIfeed", 0, SND_SOC_NOPM,
 		AIF4_VIFEED, 0, tasha_codec_enable_slimvi_feedback,
 		SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
@@ -11255,6 +11223,7 @@ static const struct snd_soc_dapm_widget tasha_dapm_widgets[] = {
 
 	SND_SOC_DAPM_INPUT("VIINPUT"),
 	SND_SOC_DAPM_INPUT("BRIDGE TX IN"),
+
 	SND_SOC_DAPM_AIF_OUT("AIF5 CPE", "AIF5 CPE TX", 0, SND_SOC_NOPM,
 			     AIF5_CPE_TX, 0),
 
@@ -12534,7 +12503,7 @@ static int tasha_dig_core_power_collapse(struct tasha_priv *tasha,
 		tasha->power_active_ref++;
 	else
 		goto unlock_mutex;
-#else
+#else //QCT original
 	if (req_state == POWER_COLLAPSE)
 		tasha->power_active_ref--;
 	else if (req_state == POWER_RESUME)
@@ -13888,10 +13857,10 @@ static int tasha_post_reset_cb(struct wcd9xxx *wcd9xxx)
 
 	/* Class-H Init*/
 	wcd_clsh_init(&tasha->clsh_d);
-#ifndef CONFIG_MACH_LGE
+#if 0
 	/* Default HPH Mode to Class-H HiFi */
 	tasha->hph_mode = CLS_H_HIFI;
-#else // LG default mode is set to CLS_H_LP
+#else //LG modification, LG default mode is set to CLS_H_LP
 	/* Default HPH Mode to Class-H LowPower */
 	tasha->hph_mode = CLS_H_LP;
 #endif
@@ -14006,10 +13975,10 @@ static int tasha_codec_probe(struct snd_soc_codec *codec)
 	}
 	/* Class-H Init*/
 	wcd_clsh_init(&tasha->clsh_d);
-#ifndef CONFIG_MACH_LGE
+#if 0
 	/* Default HPH Mode to Class-H HiFi */
 	tasha->hph_mode = CLS_H_HIFI;
-#else // LG default mode is set to CLS_H_LP
+#else //LG modification, LG default mode is set to CLS_H_LP
 	/* Default HPH Mode to Class-H LowPower */
 	tasha->hph_mode = CLS_H_LP;
 #endif
@@ -14174,11 +14143,6 @@ static int tasha_codec_probe(struct snd_soc_codec *codec)
 	snd_soc_dapm_disable_pin(dapm, "ANC EAR");
 	mutex_unlock(&codec->mutex);
 	snd_soc_dapm_sync(dapm);
-
-	if (pdata->wcd9xxx_mic_tristate)
-		tasha_set_high_impedance_mode(codec);
-
-	return ret;
 
 #ifdef CONFIG_SND_SOC_ES9218P
 		if (enable_es9218p)
@@ -14721,10 +14685,7 @@ static int tasha_probe(struct platform_device *pdev)
 	/* Register for Clock */
 	wcd_ext_clk = clk_get(tasha->wcd9xxx->dev, "wcd_clk");
 	if (IS_ERR(wcd_ext_clk)) {
-#ifdef CONFIG_MACH_LGE
-		// tasha_probe should not return 0 in case of ext_clk fail.
-		ret = PTR_ERR(wcd_ext_clk);
-#endif
+		ret = PTR_ERR(wcd_ext_clk); //LGE_UPDATE tasha_probe should not return 0 in case of ext_clk fail.
 		dev_err(tasha->wcd9xxx->dev, "%s: clk get %s failed\n",
 			__func__, "wcd_ext_clk");
 		goto err_clk;

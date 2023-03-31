@@ -25,9 +25,6 @@
 #include <sound/asound.h>
 #include "msm-dts-srs-tm-config.h"
 #include <sound/adsp_err.h>
-#ifdef CONFIG_MACH_LGE
-#define AUDIO_RX_LGE        (0x10010712)
-#endif
 
 #define TIMEOUT_MS 1000
 
@@ -566,21 +563,18 @@ static int adm_populate_channel_weight(u16 *ptr,
  * session_type - Passed value, session_type for RX or TX
  * ch_mixer - Passed value, ch_mixer for which channel mixer config is needed
  * channel_index - Passed value, channel_index for which channel is needed
- * use_default_chmap - true if default channel map  to be used
- * ch_map - input/output channel map for playback/capture session respectively
  */
 int adm_programable_channel_mixer(int port_id, int copp_idx, int session_id,
 				  int session_type,
 				  struct msm_pcm_channel_mixer *ch_mixer,
-				  int channel_index, bool use_default_chmap,
-				  char *ch_map)
+				  int channel_index)
 {
 	struct adm_cmd_set_pspd_mtmx_strtr_params_v5 *adm_params = NULL;
 	struct adm_param_data_v5 data_v5;
 	int ret = 0, port_idx, sz = 0, param_size = 0;
 	u16 *adm_pspd_params;
 	u16 *ptr;
-	int index = 0, i;
+	int index = 0;
 
 	pr_debug("%s: port_id = %d\n", __func__, port_id);
 	port_id = afe_convert_virtual_to_portid(port_id);
@@ -605,8 +599,7 @@ int adm_programable_channel_mixer(int port_id, int copp_idx, int session_id,
 			ch_mixer->input_channels[channel_index] +
 			ch_mixer->input_channels[channel_index] *
 			ch_mixer->output_channel);
-	/* Params size should be multiple of 4 bytes i.e 32bit aligned*/
-	param_size = roundup(param_size, 4);
+	roundup(param_size, 4);
 
 	sz = sizeof(struct adm_cmd_set_pspd_mtmx_strtr_params_v5) +
 			sizeof(struct default_chmixer_param_id_coeff) +
@@ -648,93 +641,84 @@ int adm_programable_channel_mixer(int port_id, int copp_idx, int session_id,
 	adm_pspd_params[3] = ch_mixer->input_channels[channel_index];
 	index = 4;
 
-	if ((session_type == SESSION_TYPE_TX) && !use_default_chmap && ch_map) {
-		for (i = 0; i < ch_mixer->output_channel; i++)
-			adm_pspd_params[index++] = ch_map[i];
-	} else {
-		if (ch_mixer->output_channel == 1) {
-			adm_pspd_params[index] = PCM_CHANNEL_FC;
-		} else if (ch_mixer->output_channel == 2) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-		} else if (ch_mixer->output_channel == 3) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
-		} else if (ch_mixer->output_channel == 4) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->output_channel == 5) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->output_channel == 6) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->output_channel == 8) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
-			adm_pspd_params[index + 6] = PCM_CHANNEL_LB;
-			adm_pspd_params[index + 7] = PCM_CHANNEL_RB;
-		}
-		index = index + ch_mixer->output_channel;
+	if (ch_mixer->output_channel == 1) {
+		adm_pspd_params[index] = PCM_CHANNEL_FC;
+	} else if (ch_mixer->output_channel == 2) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+	} else if (ch_mixer->output_channel == 3) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
+	} else if (ch_mixer->output_channel == 4) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->output_channel == 5) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->output_channel == 6) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->output_channel == 8) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
+		adm_pspd_params[index + 6] = PCM_CHANNEL_LB;
+		adm_pspd_params[index + 7] = PCM_CHANNEL_RB;
 	}
 
-	if ((session_type == SESSION_TYPE_RX) && !use_default_chmap && ch_map) {
-		for (i = 0; i < ch_mixer->input_channels[channel_index]; i++)
-			adm_pspd_params[index++] = ch_map[i];
-	} else {
-		if (ch_mixer->input_channels[channel_index] == 1) {
-			adm_pspd_params[index] = PCM_CHANNEL_FC;
-		} else if (ch_mixer->input_channels[channel_index] == 2) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-		} else if (ch_mixer->input_channels[channel_index] == 3) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
-		} else if (ch_mixer->input_channels[channel_index] == 4) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->input_channels[channel_index] == 5) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->input_channels[channel_index] == 6) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
-		} else if (ch_mixer->input_channels[channel_index] == 8) {
-			adm_pspd_params[index] = PCM_CHANNEL_FL;
-			adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
-			adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
-			adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
-			adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
-			adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
-			adm_pspd_params[index + 6] = PCM_CHANNEL_LB;
-			adm_pspd_params[index + 7] = PCM_CHANNEL_RB;
-		}
-		index = index + ch_mixer->input_channels[channel_index];
+	index = index + ch_mixer->output_channel;
+	if (ch_mixer->input_channels[channel_index] == 1) {
+		adm_pspd_params[index] = PCM_CHANNEL_FC;
+	} else if (ch_mixer->input_channels[channel_index] == 2) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+	} else if (ch_mixer->input_channels[channel_index] == 3) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
+	} else if (ch_mixer->input_channels[channel_index] == 4) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->input_channels[channel_index] == 5) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->input_channels[channel_index] == 6) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
+	} else if (ch_mixer->input_channels[channel_index] == 8) {
+		adm_pspd_params[index] = PCM_CHANNEL_FL;
+		adm_pspd_params[index + 1] = PCM_CHANNEL_FR;
+		adm_pspd_params[index + 2] = PCM_CHANNEL_LFE;
+		adm_pspd_params[index + 3] = PCM_CHANNEL_FC;
+		adm_pspd_params[index + 4] = PCM_CHANNEL_LS;
+		adm_pspd_params[index + 5] = PCM_CHANNEL_RS;
+		adm_pspd_params[index + 6] = PCM_CHANNEL_LB;
+		adm_pspd_params[index + 7] = PCM_CHANNEL_RB;
 	}
+
+	index = index + ch_mixer->input_channels[channel_index];
 	ret = adm_populate_channel_weight(&adm_pspd_params[index],
 					ch_mixer, channel_index);
 	if (ret) {
@@ -2403,12 +2387,6 @@ int adm_open(int port_id, int path, int rate, int channel_mode, int topology,
 	pr_debug("%s:port %#x path:%d rate:%d mode:%d perf_mode:%d,topo_id %d\n",
 		 __func__, port_id, path, rate, channel_mode, perf_mode,
 		 topology);
-
-#ifdef CONFIG_MACH_LGE
-	if(topology == AUDIO_RX_LGE) {
-		bit_width = 24;
-	}
-#endif
 
 	port_id = q6audio_convert_virtual_to_portid(port_id);
 	port_idx = adm_validate_and_get_port_index(port_id);

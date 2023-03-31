@@ -223,6 +223,13 @@ static int snd_usb_create_streams(struct snd_usb_audio *chip, int ctrlif)
 	int i, protocol;
 	int rest_bytes;
 
+	usb_iface = usb_ifnum_to_if(dev, ctrlif);
+	if (!usb_iface) {
+		snd_printk(KERN_ERR "%d:%u : does not exist\n",
+					dev->devnum, ctrlif);
+		return -EINVAL;
+	}
+
 	/* find audiocontrol interface */
 	host_iface = &usb_iface->altsetting[0];
 	if (!host_iface) {
@@ -487,11 +494,6 @@ static int snd_usb_audio_create(struct usb_interface *intf,
 	snd_usb_audio_create_proc(chip);
 
 	*rchip = chip;
-#ifdef CONFIG_LGE_ALICE_FRIENDS
-	if (dev->product)
-		if (!strcmp(dev->product, "HM"))
-			alice_friends_hm_earjack = true;
-#endif
 	return 0;
 }
 

@@ -35,6 +35,9 @@
 #include "wsa881x.h"
 #include "wsa881x-temp-sensor.h"
 
+#ifdef CONFIG_MACH_LGE
+#include <soc/qcom/lge/board_lge.h>
+#endif
 #define WSA881X_NUM_RETRY	5
 
 enum {
@@ -173,6 +176,7 @@ static const struct snd_kcontrol_new wsa_analog_gain_controls[] = {
 	SOC_ENUM_EXT("WSA PA Gain", wsa_pa_gain_enum,
 		     wsa_pa_gain_get, wsa_pa_gain_put),
 };
+
 
 static int codec_debug_open(struct inode *inode, struct file *file)
 {
