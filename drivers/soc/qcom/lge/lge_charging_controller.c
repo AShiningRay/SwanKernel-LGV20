@@ -26,6 +26,10 @@
 #include <soc/qcom/lge/lge_charging_scenario.h>
 #include <soc/qcom/lge/lge_cable_detection.h>
 
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+#include <soc/qcom/lge/lge_pseudo_batt.h>
+#endif
+
 #ifdef CONFIG_LGE_PM_BATTERY_ID_CHECKER
 #include <linux/power/lge_battery_id.h>
 #endif
@@ -226,7 +230,7 @@ static void step_charging_check_work(struct work_struct *work)
 	union power_supply_propval pval = {0, };
 	int vbat_mv, prev_fcc_ma;
 #ifdef CONFIG_LGE_USB_TYPE_C
-	int c_type, c_mA = 0, rc;
+	int c_type, c_mA, rc;
 
 	if (!the_controller->ctype_psy)
 		the_controller->ctype_psy = power_supply_get_by_name("usb_pd");
@@ -458,6 +462,9 @@ static enum power_supply_property lgcc_cc_properties[] = {
 #ifdef CONFIG_LGE_PM_LLK_MODE
 	POWER_SUPPLY_PROP_STORE_DEMO_ENABLED,
 #endif
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+	POWER_SUPPLY_PROP_PSEUDO_BATT,
+#endif
 	POWER_SUPPLY_PROP_TDMB_MODE_ON,
 };
 
@@ -484,6 +491,11 @@ static int lgcc_get_property(struct power_supply *psy,
 #ifdef CONFIG_LGE_PM_LLK_MODE
 	case POWER_SUPPLY_PROP_STORE_DEMO_ENABLED:
 		val->intval = controller->store_demo_enabled;
+		break;
+#endif
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+	case POWER_SUPPLY_PROP_PSEUDO_BATT:
+		val->intval = get_pseudo_batt_info(PSEUDO_BATT_MODE);
 		break;
 #endif
 	case POWER_SUPPLY_PROP_TDMB_MODE_ON:

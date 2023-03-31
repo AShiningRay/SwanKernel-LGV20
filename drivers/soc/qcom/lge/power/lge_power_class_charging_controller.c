@@ -25,6 +25,9 @@
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_CHARGER_SLEEP
 #include <linux/alarmtimer.h>
 #endif
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+#include <soc/qcom/lge/lge_pseudo_batt.h>
+#endif
 #include <soc/qcom/lge/board_lge.h>
 
 
@@ -131,6 +134,9 @@ static enum lge_power_property lge_power_lge_cc_properties[] = {
 	LGE_POWER_PROP_TEST_CHG_SCENARIO,
 	LGE_POWER_PROP_TEST_BATT_THERM_VALUE,
 	LGE_POWER_PROP_TEST_CHG_SCENARIO,
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+	LGE_POWER_PROP_PSEUDO_BATT,
+#endif
 	LGE_POWER_PROP_CHARGE_DONE,
 	LGE_POWER_PROP_TYPE,
 };
@@ -636,7 +642,11 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 	union power_supply_propval ret = {0,};
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_CABLE_DETECT
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_SIMPLE
-	;
+// do nothing
+#else
+#if 0//def CONFIG_LGE_PM_LGE_POWER_CLASS_CABLE_DETECT
+	union lge_power_propval lge_val = {0,};
+#endif
 #endif
 #endif
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_CHARGER_SLEEP
@@ -751,29 +761,14 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 				 res.chg_current != DC_CURRENT_DEF &&
 				 res.change_lvl == STS_CHE_NONE )) {
 			pr_info("DECCUR state, 0.3C Chg Current, 4.0V Float Voltage\n");
-#ifndef CONFIG_LGE_PM_CHARGING_SCENARIO_V18
 			//Float Voltage Change.
 			ret.intval = res.float_voltage;
 			cc->batt_psy->set_property(cc->batt_psy,
 				POWER_SUPPLY_PROP_VOLTAGE_MAX, &ret);
-#endif
 			//Charge Current Change
 			cc->otp_ibat_current = res.chg_current;
 			cc->chg_enable = 1;
 			lgcc_vote_fcc(LGCC_REASON_OTP, res.chg_current);
-#ifdef CONFIG_LGE_PM_CHARGING_SCENARIO_V18
-			// control wake lock in DECCUR status
-			if (res.chg_current == DC_IUSB_CURRENT) {
-				/* acquire wake_lock when chg current is set to 450mA (in warm status) */
-				if (!wake_lock_active(&cc->lcs_wake_lock))
-					wake_lock(&cc->lcs_wake_lock);
-			}
-			else {
-				/* release wake_lock in cool status */
-				if (wake_lock_active(&cc->lcs_wake_lock))
-					wake_unlock(&cc->lcs_wake_lock);
-			}
-#else
 			// control wake lock in DECCUR status
 			if (res.float_voltage == DECCUR_FLOAT_VOLTAGE_IN_WARM) {
 				/* acquire wake_lock when vfloat is set to 4000mV (in warm status) */
@@ -785,7 +780,6 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 				if (wake_lock_active(&cc->lcs_wake_lock))
 					wake_unlock(&cc->lcs_wake_lock);
 			}
-#endif
 		} else if (res.change_lvl == STS_CHE_NORMAL_TO_STPCHG ||
 				res.change_lvl == STS_CHE_DECCUR_TO_STPCHG ||
 				(res.state == CHG_BATT_STPCHG_STATE &&
@@ -806,7 +800,6 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 					(res.state == CHG_BATT_NORMAL_STATE &&
 				res.change_lvl == STS_CHE_NONE)) {
 			pr_info("NORMAL state, Restore to all.\n");
-#ifndef CONFIG_LGE_PM_CHARGING_SCENARIO_V18
 			//Float Voltage Restore.
 			ret.intval = res.float_voltage;
 			if (!cc->batt_psy->set_property(cc->batt_psy,
@@ -823,7 +816,6 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 			}
 			else
 				pr_err("Failed to set vfloat to battery psy.\n");
-#endif
 
 			cc->otp_ibat_current = res.chg_current;
 			cc->chg_enable = 1;
@@ -919,6 +911,8 @@ static void lge_monitor_batt_temp_work(struct work_struct *work){
 	pr_info("Reported Capacity : %d / voltage : %d\n",
 			ret.intval, req.batt_volt/1000);
 
+
+	//	lgcc_charger_reginfo();
 #ifdef CONFIG_LGE_PM_LGE_POWER_CLASS_CHARGER_SLEEP
 	if (cc->btm_alarm_enable) {
 		lgcc_btm_set_polling_alarm(cc, BTM_ALARM_PERIOD);
@@ -1019,6 +1013,9 @@ static int lge_power_lge_cc_property_is_writeable(struct lge_power *lpc,
 	switch (lpp) {
 		case LGE_POWER_PROP_TEST_CHG_SCENARIO:
 		case LGE_POWER_PROP_TEST_BATT_THERM_VALUE:
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+		case LGE_POWER_PROP_PSEUDO_BATT:
+#endif
 			ret = 1;
 			break;
 		default:
@@ -1114,6 +1111,11 @@ static int lge_power_lge_cc_get_property(struct lge_power *lpc,
 			val->intval = cc->test_batt_therm_value;
 			break;
 
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+		case LGE_POWER_PROP_PSEUDO_BATT:
+			val->intval = get_pseudo_batt_info(PSEUDO_BATT_MODE);
+			break;
+#endif
 		case LGE_POWER_PROP_CHARGE_DONE:
 			val->intval = cc->chg_done;
 			break;
@@ -1155,7 +1157,6 @@ static void lge_check_typec_work(struct work_struct *work) {
 		counter = 0;
 		ibat_temp = 0;
 		lgcc_vote_fcc(LGCC_REASON_CTYPE, -EINVAL);
-		goto skip_ctype;
 	}
 #else
 	cc->lge_cd_lpc->get_property(cc->lge_cd_lpc,
@@ -1540,16 +1541,14 @@ static void lge_cc_external_lge_power_changed(struct lge_power *lpc) {
 				rc = cc->ctype_psy->get_property(cc->ctype_psy,
 					POWER_SUPPLY_PROP_TYPE, &prop);
 				if (rc == 0)
-					cc->ctype_type = prop.intval;
+					cc->ctype_type = lge_val.intval;
 				pr_info("chg_type:%d, ctype_type:%d, before_ctype_type:%d\n",
 						cc->chg_type, cc->ctype_type,
 						cc->before_ctype_type);
 				if (cc->chg_type == POWER_SUPPLY_TYPE_USB_DCP) {
-					if (cc->ctype_type != cc->before_ctype_type) {
+					if (cc->ctype_type != cc->before_ctype_type)
 						if (!delayed_work_pending(&cc->ctype_detect_work))
 							schedule_delayed_work(&cc->ctype_detect_work, 0);
-						cc->before_ctype_type = cc->ctype_type;
-					}
 				}
 			}
 #endif
@@ -1563,6 +1562,7 @@ static void lge_cc_external_lge_power_changed(struct lge_power *lpc) {
 			}
 #endif
 			cc->before_chg_type = cc->chg_type;
+			cc->before_ctype_type = cc->ctype_type;
 #else
 #ifdef CONFIG_LGE_USB_TYPE_C
 			if (cc->chg_type == POWER_SUPPLY_TYPE_USB_DCP) {

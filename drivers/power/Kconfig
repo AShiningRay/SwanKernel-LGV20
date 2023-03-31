@@ -825,6 +825,20 @@ config LGE_PM_STEP_DECREASING_TAPER_CHARGING
 	help
 	  Support taper charging by decreasing per step
 
+config LGE_PM_OTP_SCENARIO_FOR_VZW
+	tristate "LGE OTP SCENARIO FOR VZW"
+	default n
+	depends on LGE_PM
+	help
+	  Support otp scenario for vzw on LGE
+
+config LGE_PM_OTP_SCENARIO_FOR_SPRINT
+	tristate "LGE OTP SCENARIO FOR SPRINT"
+	default n
+	depends on LGE_PM
+	help
+	  Support otp scenario for sprint on LGE
+
 config LGE_PM_EMBEDDED_BATT_ID_ADC
 	bool "LGE EMBEDDED BATT ID ADC"
 	default n

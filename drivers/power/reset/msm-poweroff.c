@@ -409,8 +409,7 @@ static void msm_restart_prepare(const char *cmd)
 			qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
 			qpnp_pon_set_restart_reason(
 				PON_RESTART_REASON_NORMAL);
-		}
-		else {
+		} else {
 			qpnp_pon_set_restart_reason(
 				PON_RESTART_REASON_NORMAL);
 			__raw_writel(0x77665501, restart_reason);

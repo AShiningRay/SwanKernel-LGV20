@@ -13,6 +13,9 @@
 #include <linux/stat.h>
 #include <soc/qcom/lge/power/lge_power_class.h>
 #include "lge_power.h"
+#ifdef CONFIG_LGE_PM_PSEUDO_BATTERY
+#include <soc/qcom/lge/lge_pseudo_batt.h>
+#endif
 
 
 #define LGE_POWER_ATTR(_name)					\
@@ -21,6 +24,15 @@
 	.show = lge_power_show_property,				\
 	.store = lge_power_store_property,				\
 }
+
+#if defined (CONFIG_LGE_PM_PSEUDO_BATTERY) || defined (CONFIG_LGE_PM_LGE_POWER_CLASS_PSEUDO_BATTERY)
+#define LGE_PSEUDO_BATT_ATTR(_name)					\
+{		\
+	.attr = { .name = #_name, .mode = 0644},		\
+	.show = lge_pseudo_batt_show_property,			\
+	.store = lge_pseudo_batt_store_property,		\
+}
+#endif
 
 static struct device_attribute lge_power_attrs[];
 
@@ -119,6 +131,117 @@ static ssize_t lge_power_store_property(struct device *dev,
 	return count;
 }
 
+#if defined (CONFIG_LGE_PM_PSEUDO_BATTERY)
+static ssize_t lge_pseudo_batt_show_property(struct device *dev,
+		struct device_attribute *attr,
+		char *buf)
+{
+	ssize_t ret;
+	struct lge_power *lpc = dev_get_drvdata(dev);
+	const ptrdiff_t off = attr - lge_power_attrs;
+	union lge_power_propval value;
+
+	static char *pseudo_batt[] = {
+		"NORMAL", "PSEUDO",
+	};
+
+	ret = lpc->get_property(lpc, off, &value);
+
+	if (ret < 0) {
+		if (ret != -ENODEV)
+			dev_err(dev, "driver failed to report `%s' property\n",
+					attr->attr.name);
+		return ret;
+	}
+	if (off == LGE_POWER_PROP_PSEUDO_BATT)
+		return sprintf(buf, "[%s]\nusage: echo [mode] [ID] \
+			[therm] [temp] [volt] [cap] [charging] \
+			> pseudo_batt\n",
+				pseudo_batt[value.intval]);
+
+	return 0;
+}
+
+static ssize_t lge_pseudo_batt_store_property(struct device *dev,
+		struct device_attribute *attr,
+		const char *buf, size_t count)
+{
+	int ret = -EINVAL;
+	struct pseudo_batt_info_type info;
+
+	if (sscanf(buf, "%d %d %d %d %d %d %d",
+			&info.mode, &info.id, &info.therm,
+				&info.temp, &info.volt,
+				&info.capacity, &info.charging) != 7) {
+		if (info.mode == 1) {
+			pr_err("usage : echo [mode] [ID] [therm] \
+				[temp] [volt] [cap] [charging] \
+				> pseudo_batt");
+			goto out;
+		}
+	}
+	set_pseudo_batt_info(&info);
+	ret = count;
+
+out:
+	return ret;
+}
+#elif defined (CONFIG_LGE_PM_LGE_POWER_CLASS_PSEUDO_BATTERY)
+static ssize_t lge_pseudo_batt_show_property(struct device *dev,
+		struct device_attribute *attr,
+		char *buf)
+{
+	ssize_t ret;
+	struct lge_power *lpc = lge_power_get_by_name("pseudo_battery");
+	union lge_power_propval value;
+	const ptrdiff_t off = attr - lge_power_attrs;
+
+	static char *pseudo_batt[] = {
+		"NORMAL", "PSEUDO",
+	};
+
+	ret = lpc->get_property(lpc, off, &value);
+
+	if (ret < 0) {
+		if (ret != -ENODEV)
+			dev_err(dev, "driver failed to report `%s' property\n",
+					attr->attr.name);
+		return ret;
+	}
+
+	if (off == LGE_POWER_PROP_PSEUDO_BATT)
+		return sprintf(buf, "[%s]\n", pseudo_batt[value.intval]);
+	return sprintf(buf, "%d\n", value.intval);
+}
+
+static ssize_t lge_pseudo_batt_store_property(struct device *dev,
+		struct device_attribute *attr,
+		const char *buf, size_t count)
+{
+	ssize_t ret = -EINVAL;
+	union lge_power_propval value;
+	long long_val;
+	const ptrdiff_t off = attr - lge_power_attrs;
+	struct lge_power *lpc = lge_power_get_by_name("pseudo_battery");
+
+	ret = kstrtol(buf, 10, &long_val);
+	if (ret < 0)
+		return ret;
+
+	value.intval = long_val;
+	if (long_val == 0 || long_val == 1) {
+		ret = lpc->set_property(lpc, off, &value);
+	} else {
+		return -EINVAL;
+	}
+
+	if (ret < 0)
+		return ret;
+
+	return count;
+}
+#endif
+
 /* Must be in the same order as POWER_SUPPLY_PROP_* */
 static struct device_attribute lge_power_attrs[] = {
 	/* Properties of type `int' */
@@ -130,6 +253,16 @@ static struct device_attribute lge_power_attrs[] = {
 	LGE_POWER_ATTR(input_current_max),
 	LGE_POWER_ATTR(temp),
 	LGE_POWER_ATTR(type),
+#if defined (CONFIG_LGE_PM_PSEUDO_BATTERY) || defined (CONFIG_LGE_PM_LGE_POWER_CLASS_PSEUDO_BATTERY)
+	LGE_PSEUDO_BATT_ATTR(pseudo_batt),
+	LGE_POWER_ATTR(pseudo_batt_mode),
+	LGE_POWER_ATTR(pseudo_batt_id),
+	LGE_POWER_ATTR(pseudo_batt_therm),
+	LGE_POWER_ATTR(pseudo_batt_temp),
+	LGE_POWER_ATTR(pseudo_batt_volt),
+	LGE_POWER_ATTR(pseudo_batt_capacity),
+	LGE_POWER_ATTR(pseudo_batt_charging),
+#endif
 #if defined (CONFIG_LGE_PM_BATTERY_ID_CHECKER) \
 		|| defined (CONFIG_LGE_PM_LGE_POWER_CLASS_BATTERY_ID_CHECKER)
 	LGE_POWER_ATTR(batt_id_check),

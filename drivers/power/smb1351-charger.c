@@ -11,6 +11,9 @@
  */
 
 #define pr_fmt(fmt) "SMB1351 %s: " fmt, __func__
+#ifdef CONFIG_LGE_PM_PARALLEL_CHARGING
+#define DEFINE
+#endif
 
 #include <linux/i2c.h>
 #include <linux/debugfs.h>
@@ -748,8 +751,13 @@ static int smb1351_usb_suspend(struct smb1351_charger *chip, int reason,
 
 	suspended = chip->usb_suspended_status;
 
+#ifdef CONFIG_LGE_PM_PARALLEL_CHARGING
+	pr_err("reason = %d requested_suspend = %d suspended_status = %d\n",
+						reason, suspend, suspended);
+#else
 	pr_debug("reason = %d requested_suspend = %d suspended_status = %d\n",
 						reason, suspend, suspended);
+#endif
 
 	if (suspend == false)
 		suspended &= ~reason;
@@ -961,6 +969,9 @@ static int smb1351_fastchg_current_set(struct smb1351_charger *chip,
 	int i, rc;
 	bool is_pre_chg = false;
 
+#ifdef CONFIG_LGE_PM_PARALLEL_CHARGING
+	pr_err("%s - fastchg_current[%d]\n", __func__, fastchg_current);
+#endif
 	mutex_lock(&chip->fcc_lock);
 	if (fastchg_current < SMB1351_CHG_PRE_MIN_MA)
 		fastchg_current = SMB1351_CHG_PRE_MIN_MA;
@@ -2771,7 +2782,11 @@ static void smb1351_chg_ctrl_in_jeita(struct smb1351_charger *chip)
 static void smb1351_chg_adc_notification(enum qpnp_tm_state state, void *ctx)
 {
 	struct smb1351_charger *chip = ctx;
+#ifdef CONFIG_LGE_PM
+	struct battery_status *cur = NULL;
+#else
 	struct battery_status *cur;
+#endif
 	int temp;
 
 	if (state >= ADC_TM_STATE_NUM) {
@@ -2870,7 +2885,12 @@ static void smb1351_chg_adc_notification(enum qpnp_tm_state state, void *ctx)
 				chip->batt_hot_decidegc + HYSTERESIS_DECIDEGC;
 		}
 	}
-
+#ifdef CONFIG_LGE_PM
+	if (!cur) {
+		pr_err("no new status with state:%d,temp:%d\n", state,temp);
+		return;
+	}
+#endif
 	if (cur->batt_present)
 		chip->battery_missing = false;
 	else
@@ -3704,7 +3724,6 @@ static int smb1351_update_usb_supply_icl(struct smb1351_charger *chip)
 {
 	int rc, type, icl;
 	union power_supply_propval pval = {0, };
-
 	rc = chip->usb_psy->get_property(chip->usb_psy,
 			POWER_SUPPLY_PROP_REAL_TYPE, &pval);
 	if (rc == -EINVAL) {
@@ -4732,8 +4751,11 @@ static int smb1351_parallel_slave_probe(struct i2c_client *client,
 
 	i2c_set_clientdata(client, chip);
 	mutex_init(&chip->parallel_config_lock);
-
+#ifdef CONFIG_LGE_PM
+	chip->parallel_psy.name		= "usb-parallel";
+#else
 	chip->parallel_psy.name		= "parallel";
+#endif
 	chip->parallel_psy.type		= POWER_SUPPLY_TYPE_PARALLEL;
 	chip->parallel_psy.get_property	= smb1351_parallel_get_property;
 	chip->parallel_psy.set_property	= smb1351_parallel_set_property;
