@@ -2,7 +2,7 @@
  * drivers/staging/android/ion/ion_priv.h
  *
  * Copyright (C) 2011 Google, Inc.
- * Copyright (c) 2011-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2016, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -186,7 +186,7 @@ struct ion_heap_ops {
 struct ion_heap {
 	struct plist_node node;
 	struct ion_device *dev;
-	enum ion_heap_type type;
+	unsigned int type;
 	struct ion_heap_ops *ops;
 	unsigned long flags;
 	unsigned int id;
@@ -200,8 +200,8 @@ struct ion_heap {
 	struct task_struct *task;
 
 	int (*debug_show)(struct ion_heap *heap, struct seq_file *, void *);
-	atomic_long_t total_allocated;
-	atomic_long_t total_handles;
+	atomic_t total_allocated;
+	atomic_t total_handles;
 };
 
 /**
@@ -500,7 +500,7 @@ void ion_pages_sync_for_device(struct device *dev, struct page *page,
 		size_t size, enum dma_data_direction dir);
 
 int ion_walk_heaps(struct ion_client *client, int heap_id,
-			enum ion_heap_type type, void *data,
+			unsigned int type, void *data,
 			int (*f)(struct ion_heap *heap, void *data));
 
 struct ion_handle *ion_handle_get_by_id(struct ion_client *client,
