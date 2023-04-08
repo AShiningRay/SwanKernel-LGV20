@@ -21,6 +21,7 @@
 #include <linux/rtmutex.h>
 #include <linux/vmalloc.h>
 #include <linux/slab.h>
+#include <linux/list_lru.h>
 
 extern struct list_lru binder_alloc_lru;
 struct binder_transaction;
@@ -73,7 +74,6 @@ struct binder_lru_page {
 	struct binder_alloc *alloc;
 };
 
-
 /**
  * struct binder_alloc - per-binder proc state for binder allocator
  * @vma:                vm_area_struct passed to mmap_handler
@@ -93,6 +93,7 @@ struct binder_lru_page {
  *                      page of mmap'd space
  * @buffer_size:        size of address space specified via mmap
  * @pid:                pid for associated binder_proc (invariant after init)
+ * @pages_high:         high watermark of offset in @pages
  *
  * Bookkeeping structure for per-proc address space management for binder
  * buffers. It is normally initialized during binder_init() and binder_mmap()
@@ -128,6 +129,7 @@ extern struct binder_buffer *binder_alloc_new_buf(struct binder_alloc *alloc,
 						  size_t extra_buffers_size,
 						  int is_async);
 extern void binder_alloc_init(struct binder_alloc *alloc);
+void binder_alloc_shrinker_init(void);
 extern void binder_alloc_vma_close(struct binder_alloc *alloc);
 extern struct binder_buffer *
 binder_alloc_prepare_to_free(struct binder_alloc *alloc,

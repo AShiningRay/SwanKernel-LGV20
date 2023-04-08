@@ -27,8 +27,11 @@
 #include <linux/vmalloc.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
+#include <linux/list_lru.h>
 #include "binder_alloc.h"
 #include "binder_trace.h"
+
+struct list_lru binder_alloc_lru;
 
 static DEFINE_MUTEX(binder_alloc_mmap_lock);
 
@@ -52,10 +55,10 @@ static size_t binder_alloc_buffer_size(struct binder_alloc *alloc,
 				       struct binder_buffer *buffer)
 {
 	if (list_is_last(&buffer->entry, &alloc->buffers))
-		return alloc->buffer +
-		       alloc->buffer_size - (void *)buffer->data;
-	return (size_t)list_entry(buffer->entry.next,
-			  struct binder_buffer, entry) - (size_t)buffer->data;
+		return (u8 *)alloc->buffer +
+		       alloc->buffer_size - (u8 *)buffer->data;
+	return (u8 *)list_entry(buffer->entry.next,
+			  struct binder_buffer, entry) - (u8 *)buffer->data;
 }
 
 static void binder_insert_free_buffer(struct binder_alloc *alloc,
@@ -105,9 +108,9 @@ static void binder_insert_allocated_buffer_locked(
 		buffer = rb_entry(parent, struct binder_buffer, rb_node);
 		BUG_ON(buffer->free);
 
-		if (new_buffer < buffer)
+		if (new_buffer->data < buffer->data)
 			p = &parent->rb_left;
-		else if (new_buffer > buffer)
+		else if (new_buffer->data > buffer->data)
 			p = &parent->rb_right;
 		else
 			BUG();
