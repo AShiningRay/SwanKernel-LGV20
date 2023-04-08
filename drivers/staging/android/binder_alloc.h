@@ -22,6 +22,7 @@
 #include <linux/vmalloc.h>
 #include <linux/slab.h>
 
+extern struct list_lru binder_alloc_lru;
 struct binder_transaction;
 
 /**
@@ -59,6 +60,19 @@ struct binder_buffer {
 	size_t extra_buffers_size;
 	uint8_t data[0];
 };
+
+/**
+ * struct binder_lru_page - page object used for binder shrinker
+ * @page_ptr: pointer to physical page in mmap'd space
+ * @lru:      entry in binder_alloc_lru
+ * @alloc:    binder_alloc for a proc
+ */
+struct binder_lru_page {
+	struct list_head lru;
+	struct page *page_ptr;
+	struct binder_alloc *alloc;
+};
+
 
 /**
  * struct binder_alloc - per-binder proc state for binder allocator
@@ -100,8 +114,14 @@ struct binder_alloc {
 	size_t buffer_size;
 	uint32_t buffer_free;
 	int pid;
+	size_t pages_high;
 };
 
+#ifdef CONFIG_ANDROID_BINDER_IPC_SELFTEST
+void binder_selftest_alloc(struct binder_alloc *alloc);
+#else
+static inline void binder_selftest_alloc(struct binder_alloc *alloc) {}
+#endif
 extern struct binder_buffer *binder_alloc_new_buf(struct binder_alloc *alloc,
 						  size_t data_size,
 						  size_t offsets_size,
@@ -120,6 +140,8 @@ extern void binder_alloc_deferred_release(struct binder_alloc *alloc);
 extern int binder_alloc_get_allocated_count(struct binder_alloc *alloc);
 extern void binder_alloc_print_allocated(struct seq_file *m,
 					 struct binder_alloc *alloc);
+void binder_alloc_print_pages(struct seq_file *m,
+			      struct binder_alloc *alloc);
 
 /**
  * binder_alloc_get_free_async_space() - get free space available for async
