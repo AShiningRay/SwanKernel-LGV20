@@ -50,7 +50,6 @@ struct binder_buffer {
 	unsigned free:1;
 	unsigned allow_user_free:1;
 	unsigned async_transaction:1;
-	unsigned free_in_progress:1;
 	unsigned debug_id:29;
 
 	struct binder_transaction *transaction;
@@ -89,8 +88,7 @@ struct binder_lru_page {
  * @allocated_buffers:  rb tree of allocated buffers sorted by address
  * @free_async_space:   VA space available for async buffers. This is
  *                      initialized at mmap time to 1/2 the full VA space
- * @pages:              array of physical page addresses for each
- *                      page of mmap'd space
+ * @pages:              array of binder_lru_page
  * @buffer_size:        size of address space specified via mmap
  * @pid:                pid for associated binder_proc (invariant after init)
  * @pages_high:         high watermark of offset in @pages
@@ -111,7 +109,7 @@ struct binder_alloc {
 	struct rb_root free_buffers;
 	struct rb_root allocated_buffers;
 	size_t free_async_space;
-	struct page **pages;
+	struct binder_lru_page *pages;
 	size_t buffer_size;
 	uint32_t buffer_free;
 	int pid;
@@ -123,6 +121,8 @@ void binder_selftest_alloc(struct binder_alloc *alloc);
 #else
 static inline void binder_selftest_alloc(struct binder_alloc *alloc) {}
 #endif
+enum lru_status binder_alloc_free_page(struct list_head *item,
+				       spinlock_t *lock, void *cb_arg);
 extern struct binder_buffer *binder_alloc_new_buf(struct binder_alloc *alloc,
 						  size_t data_size,
 						  size_t offsets_size,
